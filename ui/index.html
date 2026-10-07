@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en" class="booting">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ALL MUSIC</title>
+<link rel="icon" href="/logo.png">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body class="gated">
+
+<!-- Barra de título própria (a do Windows foi removida): arrasta a janela e traz início, busca e conta -->
+<header id="titlebar">
+  <div class="tb-brand"><img src="/logo.png" alt=""><span>ALL MUSIC</span></div>
+  <div class="tb-center">
+    <button class="round" id="home" title="Início"><svg class="i"><use href="/icons.svg#home"/></svg></button>
+    <div class="search-wrap">
+      <label class="search">
+        <svg class="i"><use href="/icons.svg#search"/></svg>
+        <input id="search" type="text" spellcheck="false" autocomplete="off"
+               placeholder="Buscar no Spotify ou colar um link do YouTube">
+      </label>
+      <div class="search-drop" id="search-drop" hidden></div>
+    </div>
+  </div>
+  <div class="tb-right">
+    <button class="round avatar" id="account" title="Conta e configurações"></button>
+    <div class="win">
+      <button data-win="min" title="Minimizar"><svg class="i"><use href="/icons.svg#win-min"/></svg></button>
+      <button data-win="max" title="Maximizar"><svg class="i"><use id="win-max-icon" href="/icons.svg#win-max"/></svg></button>
+      <button data-win="close" title="Fechar"><svg class="i"><use href="/icons.svg#close"/></svg></button>
+    </div>
+  </div>
+</header>
+
+<!-- Onboarding: o app só abre depois do login com o Spotify -->
+<section id="onboard">
+  <div class="ob-side">
+    <img class="ob-logo" src="/logo.png" alt="ALL MUSIC">
+    <span class="eyebrow">Spotify + YouTube</span>
+    <h1 class="display">Toda a sua música.<br>Um lugar só.</h1>
+    <p>Sua biblioteca do Spotify e aquelas músicas que só existem no YouTube, na mesma fila, sem navegador aberto.</p>
+  </div>
+
+  <div class="ob-main">
+    <div class="ob-card">
+      <button class="ic ob-skip" id="ob-skip" title="Entrar sem Spotify"><svg class="i"><use href="/icons.svg#close"/></svg></button>
+      <h2>Bem-vindo ao ALL MUSIC</h2>
+      <p>Para começar, entre com a sua conta do Spotify. É ela que traz suas playlists, curtidas e a reprodução.</p>
+      <ul class="ob-points">
+        <li><svg class="i"><use href="/icons.svg#check"/></svg>Requer Spotify Premium para tocar</li>
+        <li><svg class="i"><use href="/icons.svg#check"/></svg>Seu login acontece no site do Spotify, no seu navegador</li>
+        <li><svg class="i"><use href="/icons.svg#check"/></svg>Um clique: sem chave nem cadastro de desenvolvedor</li>
+      </ul>
+      <div class="ob-actions">
+        <button class="btn primary" id="ob-connect"><svg class="i"><use href="/icons.svg#spotify"/></svg>Conectar com Spotify</button>
+      </div>
+
+      <p class="ob-status" id="ob-status" hidden></p>
+      <p class="ob-hint">Fechar esta tela entra sem Spotify, só com músicas do YouTube. Dá para conectar depois pelo ícone de conta.</p>
+    </div>
+  </div>
+</section>
+
+<div id="app">
+  <aside class="col left">
+    <section class="panel library">
+      <header class="panel-head">
+        <button class="lib-toggle" id="lib-toggle" title="Recolher biblioteca"><svg class="i"><use href="/icons.svg#library"/></svg><span>Sua biblioteca</span></button>
+        <button class="ic" id="lib-close" title="Recolher biblioteca"><svg class="i"><use href="/icons.svg#collapse-left"/></svg></button>
+      </header>
+      <div class="chips" id="lib-chips">
+        <button class="chip" data-lib="playlists">Playlists</button>
+        <button class="chip" data-lib="local">Minhas</button>
+      </div>
+      <div class="lib-list scroll" id="lib-list"></div>
+      <button class="btn block" id="new-playlist"><svg class="i"><use href="/icons.svg#plus"/></svg><span>Nova playlist</span></button>
+    </section>
+  </aside>
+
+  <main class="col center">
+    <section class="panel main">
+      <div class="tabs" id="tabs"></div>
+      <div class="list scroll" id="list"></div>
+      <div class="home scroll" id="home-view" hidden></div>
+    </section>
+
+    <footer class="panel playerbar">
+      <img class="pb-art" id="pb-art" alt="">
+      <div class="pb-meta">
+        <span class="pb-title" id="pb-title">Nada tocando</span>
+        <span class="pb-artist" id="pb-artist"></span>
+      </div>
+      <div class="pb-mid">
+        <div class="pb-ctrl">
+          <button class="ic toggle" id="shuffle" title="Aleatório"><svg class="i"><use href="/icons.svg#shuffle"/></svg></button>
+          <button class="ic lg" id="prev" title="Anterior"><svg class="i solid"><use href="/icons.svg#prev"/></svg></button>
+          <button class="play-btn" id="play" title="Tocar / pausar"><svg class="i solid"><use id="play-icon" href="/icons.svg#play"/></svg></button>
+          <button class="ic lg" id="next" title="Próxima"><svg class="i solid"><use href="/icons.svg#next"/></svg></button>
+          <button class="ic toggle" id="repeat" title="Repetir fila"><svg class="i"><use href="/icons.svg#repeat"/></svg></button>
+        </div>
+        <div class="pb-seek">
+          <span id="pb-cur">0:00</span>
+          <input type="range" id="seek" min="0" max="1000" value="0" aria-label="Posição">
+          <span id="pb-rem"></span>
+        </div>
+      </div>
+      <div class="pb-vol">
+        <svg class="i"><use href="/icons.svg#volume"/></svg>
+        <input type="range" id="volume" min="0" max="100" value="70" aria-label="Volume">
+      </div>
+    </footer>
+  </main>
+
+  <aside class="col right panel">
+    <header class="panel-head">Tocadas recentemente
+      <button class="ic" id="side-close" title="Recolher painel"><svg class="i"><use href="/icons.svg#collapse"/></svg></button>
+    </header>
+    <div class="recent scroll" id="recent"></div>
+    <button class="side-open" id="side-open" title="Expandir painel"><svg class="i"><use href="/icons.svg#expand"/></svg></button>
+  </aside>
+</div>
+
+<dialog id="settings" class="dlg">
+  <button class="ic dlg-close" data-close title="Fechar"><svg class="i"><use href="/icons.svg#close"/></svg></button>
+  <h3>Conta e configurações</h3>
+  <div id="settings-body"></div>
+</dialog>
+
+<dialog id="ask" class="dlg">
+  <form method="dialog">
+    <h3 id="ask-title"></h3>
+    <input id="ask-input" type="text" spellcheck="false" autocomplete="off">
+    <div class="actions">
+      <button type="button" class="btn ghost" data-close>Cancelar</button>
+      <button class="btn primary" value="ok">Criar</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Player do YouTube: só o áudio interessa, então fica fora da tela -->
+<div id="yt-holder" aria-hidden="true"><div id="yt-player"></div></div>
+
+<div id="menu" hidden></div>
+<div id="toasts"></div>
+
+<script type="module" src="/js/app.js"></script>
+</body>
+</html>

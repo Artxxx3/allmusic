@@ -1,0 +1,4 @@
+# Embute o runtime do Visual C++ no executável: sem isso o motor pede VCRUNTIME140.dll,
+# que não existe em Windows recém-instalado.
+[target.x86_64-pc-windows-msvc]
+rustflags = ["-C", "target-feature=+crt-static"]

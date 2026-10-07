@@ -1,0 +1,13 @@
+# dependências e saídas de build
+node_modules/
+dist/
+host/bin/
+host/obj/
+engine/target/
+
+# vídeos: gravações de tela brutas e arquivos renderizados
+video/out/
+video/public/raw*.mp4
+
+# pacotes gerados à mão
+*.zip
