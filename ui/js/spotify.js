@@ -125,6 +125,10 @@ export const playlist = id => ask({ cmd: 'playlist', id });
 export const search = q => ask({ cmd: 'search', q });
 export const tracks = uris => ask({ cmd: 'tracks', uris });
 export const like = (uri, on) => ask({ cmd: 'like', uri, on });
+/** Perfil do artista: { id, name, image, top: [{uri}], albums: [{id, name, year, image}] }. */
+export const artist = id => ask({ cmd: 'artist', id });
+/** Álbum: { id, name, artist, year, image, refs: [{uri}] }. */
+export const album = id => ask({ cmd: 'album', id });
 
 // ---------- reprodução (mesma interface do youtube.js) ----------
 
@@ -141,6 +145,8 @@ export async function load(track, volume) {
 export const pause = () => { control({ cmd: 'pause' }); };
 export const resume = () => { control({ cmd: 'play' }); };
 export const setVolume = v => { control({ cmd: 'volume', v }); };
+/** Efeito aplicado ao áudio do Spotify: '' (nenhum), 'muffled' ou '8d'; `params` são os ajustes dele. */
+export const setFx = (name, params) => { control({ cmd: 'fx', name, ...params }); };
 
 export function seek(ms) {
   control({ cmd: 'seek', ms: Math.round(ms) });

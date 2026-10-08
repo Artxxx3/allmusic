@@ -1,7 +1,7 @@
 import { store, keyOf } from './store.js';
 import { P, onChange, playList, jump, playNow, enqueue, removeFromQueue, toggle, next, prev, position, seek, setVolume, setMode } from './player.js';
 import * as S from './spotify.js';
-import { parseYouTubeId, fetchYouTubeTrack } from './youtube.js';
+import { parseYouTubeId, fetchYouTubeTrack, searchYouTube, setFx as setYouTubeFx } from './youtube.js';
 import { LANGUAGES, lang, setLanguage, t, tn, translateDom } from './i18n.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -196,6 +196,11 @@ function renderTabs() {
     `<button class="tab${id === view ? ' on' : ''}" data-view="${id}">${esc(t(label))}</button>`).join('');
 }
 
+// Faixas do Spotify trazem os artistas com id: cada nome abre o perfil.
+const artistsHtml = track => (track.artists?.length
+  ? track.artists.map(a => `<span class="link" data-artist-id="${esc(a.id)}">${esc(a.name)}</span>`).join(', ')
+  : esc(track.artist));
+
 function rowHtml(track, i) {
   const on = isCurrent(track, i);
   const likedNow = isLiked(track);
@@ -203,7 +208,7 @@ function rowHtml(track, i) {
     <span class="num">${i + 1}</span>
     ${track.art ? `<img loading="lazy" src="${esc(track.art)}" alt="">` : '<span class="noart"></span>'}
     <span class="t">${esc(track.title)}</span>
-    <span class="a">${esc(track.artist)}</span>
+    <span class="a">${artistsHtml(track)}</span>
     ${cur().showPlays ? playsHtml(track) : track.src === 'yt' ? '<span class="badge">YT</span>' : '<span></span>'}
     <span class="d">${track.dur ? fmt(track.dur) : ''}</span>
     <button class="ic${likedNow ? ' liked' : ''}" data-act="like" title="${t(likedNow ? 'Remover das curtidas' : 'Curtir')}">${icon('heart', likedNow ? 'solid' : '')}</button>
@@ -224,13 +229,16 @@ function renderList() {
   list.hidden = !!v.home;
   $('#home-view').hidden = !v.home;
   if (v.home) return renderHome();
+  // artista e álbum têm cabeçalho (e discografia no fim) em volta das faixas
+  const head = v.head?.() || '';
+  const foot = v.foot?.() || '';
   if (loadingView) {
     list.innerHTML = `<div class="empty">${t('Carregando…')}</div>`;
   } else if (!v.tracks.length && !v.more) {
-    list.innerHTML = `<div class="empty">${esc(t(v.empty || 'Nada por aqui.'))}</div>`;
+    list.innerHTML = head + `<div class="empty">${esc(t(v.empty || 'Nada por aqui.'))}</div>` + foot;
   } else {
     list.classList.toggle('with-plays', !!v.showPlays);
-    list.innerHTML = v.tracks.map(rowHtml).join('') + (!v.more ? '' : v.moreFailed ? MORE_RETRY : MORE_LOADING);
+    list.innerHTML = head + v.tracks.map(rowHtml).join('') + (!v.more ? '' : v.moreFailed ? MORE_RETRY : MORE_LOADING) + foot;
     loadMoreIfNear();
   }
 }
@@ -316,8 +324,9 @@ function playCounts(period) {
 function artistCounts(entries) {
   const artists = new Map();
   for (const { track, n } of entries) {
-    for (const name of track.artist.split(', ')) {
+    for (const { name, id } of track.artists?.length ? track.artists : track.artist.split(', ').map(name => ({ name }))) {
       const a = artists.get(name) || { name, n: 0, best: 0, art: '' };
+      a.id ||= id;
       a.n += n;
       if (n > a.best) { a.best = n; a.art = track.artBig || track.art; }
       artists.set(name, a);
@@ -391,7 +400,7 @@ function renderHome() {
     </section>
     <section>
       <div class="home-title"><h2>${t('Top artistas')}</h2><div class="chips">${chips}</div></div>
-      ${artists.length ? `<div class="artists">${artists.map(a => `<button class="artist" data-artist="${esc(a.name)}"${a.art ? ` style="--art: url('${esc(a.art)}')"` : ''}>
+      ${artists.length ? `<div class="artists">${artists.map(a => `<button class="artist" data-artist="${esc(a.name)}" data-id="${esc(a.id || '')}"${a.art ? ` style="--art: url('${esc(a.art)}')"` : ''}>
         <b>${esc(a.name)}</b><small>${playsLabel(a.n)}</small></button>`).join('')}</div>` : nothing}
     </section>
     <section>
@@ -405,11 +414,11 @@ function renderHome() {
 $('#home-view').addEventListener('click', e => {
   const el = e.target.closest('[data-period], [data-play], [data-recent], [data-artist], [data-go]');
   if (!el) return;
-  const { period, play, recent, artist, go } = el.dataset;
+  const { period, play, recent, artist, id, go } = el.dataset;
   if (period) { store.set('homePeriod', period); renderHome(); }
   else if (play) playNow(plays()[play].t);
   else if (recent) playNow(store.get('recent', [])[+recent]);
-  else if (artist) runSearch(artist);
+  else if (artist) { if (id && S.isConnected()) openArtist(id, artist); else searchFor(artist, S.isConnected() ? 'sp' : 'yt'); }
   else if (go) showView(go);
 });
 
@@ -510,6 +519,13 @@ $('#list').addEventListener('click', async e => {
     v.moreFailed = false;
     return loadMore();
   }
+  const link = e.target.closest('[data-artist-id], [data-album]');
+  if (link) return link.dataset.album ? openAlbum(link.dataset.album) : openArtist(link.dataset.artistId, link.textContent);
+  if (e.target.closest('[data-act="play-all"]')) {
+    if (!v.tracks.length) return;
+    queueSource = v;
+    return playList(v.tracks, 0);
+  }
   const row = e.target.closest('.row');
   if (!row) return;
   const i = +row.dataset.i;
@@ -528,7 +544,7 @@ let menuItems = [];
 
 function openMenu(anchor, track, i) {
   const v = cur();
-  menuItems = [
+  const items = [
     ['Tocar a seguir', () => enqueue(track, true)],
     ['Adicionar à fila', () => enqueue(track)],
     null,
@@ -541,13 +557,22 @@ function openMenu(anchor, track, i) {
       addToLocal(p, track);
     }],
   ];
-  if (v.removable) menuItems.push(null, ['Remover desta lista', () => removeFromView(v, i)]);
-  if (host) menuItems.push(null, [track.src === 'yt' ? 'Abrir no YouTube' : 'Abrir no Spotify', () => host.postMessage({
+  const artist = track.artists?.[0];
+  if (artist?.id && S.isConnected()) items.push(null, ['Ir para o artista', () => openArtist(artist.id, artist.name)]);
+  if (track.album?.id && S.isConnected()) items.push(...(artist?.id ? [] : [null]), ['Ir para o álbum', () => openAlbum(track.album.id, track.album.name)]);
+  if (v.removable) items.push(null, ['Remover desta lista', () => removeFromView(v, i)]);
+  if (host) items.push(null, [track.src === 'yt' ? 'Abrir no YouTube' : 'Abrir no Spotify', () => host.postMessage({
     type: 'open', value: track.src === 'yt' ? 'https://www.youtube.com/watch?v=' + track.id : 'https://open.spotify.com/track/' + track.id,
   })]);
+  showMenu(anchor, items);
+}
 
+/** Itens: [rótulo, ação, marcado?], null (separador) ou um texto (nota). */
+function showMenu(anchor, items) {
+  menuItems = items;
   const menu = $('#menu');
-  menu.innerHTML = menuItems.map((it, k) => (it ? `<button data-k="${k}">${esc(t(it[0]))}</button>` : '<hr>')).join('');
+  menu.innerHTML = items.map((it, k) => (!it ? '<hr>' : typeof it === 'string' ? `<small>${esc(t(it))}</small>`
+    : `<button data-k="${k}"${it[2] ? ' class="on"' : ''}>${esc(t(it[0]))}${it[2] ? icon('check') : ''}</button>`)).join('');
   menu.hidden = false;
   const r = anchor.getBoundingClientRect();
   menu.style.left = Math.max(8, Math.min(r.right - menu.offsetWidth, innerWidth - menu.offsetWidth - 8)) + 'px';
@@ -586,6 +611,53 @@ document.addEventListener('pointerdown', e => {
   if (!$('#menu').hidden && !e.target.closest('#menu')) $('#menu').hidden = true;
 }, true);
 
+// ---------- artista e álbum (Spotify) ----------
+
+const heroHtml = (kind, info, sub, circle) => `
+  <header class="hero"${info.image ? ` style="--banner: url('${esc(info.image)}')"` : ''}>
+    ${info.image ? `<img class="${circle ? 'circle' : ''}" src="${esc(info.image)}" alt="">` : `<span class="tile${circle ? ' circle' : ''}"></span>`}
+    <div>
+      <span class="eyebrow">${t(kind)}</span>
+      <h1>${esc(info.name)}</h1>
+      ${sub ? `<small>${esc(sub)}</small>` : ''}
+      <button class="btn primary" data-act="play-all">${icon('play', 'solid')}${t('Tocar')}</button>
+    </div>
+  </header>`;
+
+const NO_SPOTIFY_PAGES = 'Conecte o Spotify pelo ícone de conta para ver artistas e álbuns.';
+
+function openArtist(id, name) {
+  if (!S.isConnected()) return toast(NO_SPOTIFY_PAGES);
+  let info = null;
+  const v = lazy(name || t('Artista'), async () => {
+    info = await S.artist(id);
+    v.title = info.name;
+    renderTabs();
+    return info.top;
+  }, {
+    empty: 'Nenhuma faixa popular disponível.',
+    head: () => (info ? heroHtml('Artista', info, '', true) + `<h2 class="sec">${t('Populares')}</h2>` : ''),
+    foot: () => (info?.albums.length ? `<h2 class="sec">${t('Discografia')}</h2><div class="albums">${info.albums.map(a => `<button class="album" data-album="${esc(a.id)}">
+      ${a.image ? `<img loading="lazy" src="${esc(a.image)}" alt="">` : '<span class="tile"></span>'}<b>${esc(a.name)}</b><small>${a.year || ''}</small></button>`).join('')}</div>` : ''),
+  });
+  openCtx(v);
+}
+
+function openAlbum(id, name) {
+  if (!S.isConnected()) return toast(NO_SPOTIFY_PAGES);
+  let info = null;
+  const v = lazy(name || t('Álbum'), async () => {
+    info = await S.album(id);
+    v.title = info.name;
+    renderTabs();
+    return info.refs;
+  }, {
+    empty: 'Álbum vazio.',
+    head: () => (info ? heroHtml('Álbum', info, [info.artist, info.year].filter(Boolean).join(' · '), false) : ''),
+  });
+  openCtx(v);
+}
+
 // ---------- busca / YouTube ----------
 
 let searchTimer = 0;
@@ -607,17 +679,33 @@ async function addYouTube(id) {
   playNow(t);
 }
 
+// Onde a busca procura: 'sp' ou 'yt'. Sem Spotify conectado, começa no YouTube.
+const searchSource = () => store.get('searchSource') || (S.isConnected() ? 'sp' : 'yt');
+const NO_SPOTIFY_SEARCH = 'Conecte o Spotify pelo ícone de conta para buscar nele.';
+
+/** Abre a lista completa de resultados de `q` na fonte escolhida. */
+function searchFor(q, source = searchSource()) {
+  if (source === 'yt') {
+    const v = { title: t('YouTube: {q}', { q }), tracks: [], empty: 'Nenhum resultado.' };
+    v.more = async () => {
+      v.tracks = await searchYouTube(q);
+      v.more = null;
+    };
+    return openCtx(v);
+  }
+  if (!S.isConnected()) return toast(NO_SPOTIFY_SEARCH);
+  openCtx(lazy(t('Busca: {q}', { q }), () => S.search(q), { empty: 'Nenhum resultado.' }));
+}
+
 function runSearch(text) {
   const q = text.trim();
   if (!q) return;
   const id = parseYouTubeId(q);
   if (id) return addYouTube(id);
   if (/^https?:\/\//i.test(q)) return toast('Link não reconhecido. Cole um link de vídeo do YouTube.');
-  if (!S.isConnected()) return toast('Sem Spotify, a busca só aceita links do YouTube');
-  openCtx(lazy(t('Busca: {q}', { q }), () => S.search(q), { empty: 'Nenhum resultado.' }));
+  searchFor(q);
 }
 
-// Resultados enquanto digita: uma lista curta sob a busca. Enter (ou "ver todos") abre a lista completa.
 const drop = $('#search-drop');
 let dropTracks = [];
 let dropIndex = -1;   // item destacado pelo teclado; dropTracks.length é o "ver todos"
@@ -632,10 +720,17 @@ function closeDrop() {
 
 function drawDrop(message) {
   drop.hidden = false;
-  if (message) return void (drop.innerHTML = `<div class="hint">${esc(t(message))}</div>`);
-  drop.innerHTML = dropTracks.map((track, i) => `<button class="drop-item${i === dropIndex ? ' on' : ''}" data-i="${i}">
+  const source = searchSource();
+  const tabs = `<div class="drop-tabs">${[['sp', 'Spotify', 'spotify'], ['yt', 'YouTube', 'yt']].map(([id, label, glyph]) =>
+    `<button class="chip${id === source ? ' on' : ''}" data-source="${id}">${icon(glyph)}${label}</button>`).join('')}</div>`;
+  if (message) return void (drop.innerHTML = tabs + `<div class="hint">${esc(t(message))}</div>`);
+  drop.innerHTML = tabs + dropTracks.map((track, i) => {
+    const likedNow = isLiked(track);
+    return `<div class="drop-item${i === dropIndex ? ' on' : ''}" data-i="${i}">
       ${track.art ? `<img src="${esc(track.art)}" alt="">` : '<span class="tile"></span>'}
-      <span class="lib-text"><b>${esc(track.title)}</b><small>${esc(track.artist)}</small></span></button>`).join('')
+      <span class="lib-text"><b>${esc(track.title)}</b><small>${esc(track.artist)}</small></span>
+      <button class="ic${likedNow ? ' liked' : ''}" data-like title="${t(likedNow ? 'Remover das curtidas' : 'Curtir')}">${icon('heart', likedNow ? 'solid' : '')}</button></div>`;
+  }).join('')
     + `<button class="drop-all${dropIndex === dropTracks.length ? ' on' : ''}" data-all>${t('Ver todos os resultados')}</button>`;
 }
 
@@ -643,17 +738,28 @@ async function suggest(text) {
   const q = text.trim();
   if (q.length < 2) return closeDrop();
   const seq = ++dropSeq;
-  if (!S.isConnected()) return drawDrop('Sem Spotify, a busca só aceita links do YouTube');
-  if (drop.hidden) drawDrop('Buscando…');
+  const source = searchSource();
+  if (source === 'sp' && !S.isConnected()) {
+    dropTracks = [];
+    return drawDrop(NO_SPOTIFY_SEARCH);
+  }
+  if (drop.hidden || !dropTracks.length) drawDrop('Buscando…');
   try {
-    const refs = await S.search(q);
-    const found = refs.length ? await S.tracks(refs.slice(0, 6).map(r => r.uri)) : [];
+    let found;
+    if (source === 'yt') {
+      found = (await searchYouTube(q)).slice(0, 6);
+    } else {
+      const refs = await S.search(q);
+      found = refs.length ? await S.tracks(refs.slice(0, 6).map(r => r.uri)) : [];
+    }
     if (seq !== dropSeq) return;
     dropTracks = found;
     dropIndex = -1;
     drawDrop(found.length ? '' : 'Nenhum resultado.');
   } catch (e) {
-    if (seq === dropSeq) drawDrop(e.message);
+    if (seq !== dropSeq) return;
+    dropTracks = [];
+    drawDrop(e.message);
   }
 }
 
@@ -676,7 +782,8 @@ $('#search').addEventListener('input', e => {
     closeDrop();
     return runSearch(text);
   }
-  searchTimer = setTimeout(() => suggest(text), 280);
+  // a busca do YouTube é mais pesada (uma página inteira por consulta): espera um pouco mais
+  searchTimer = setTimeout(() => suggest(text), searchSource() === 'yt' ? 450 : 280);
 });
 $('#search').addEventListener('focus', e => {
   if (drop.hidden && e.target.value.trim().length >= 2) suggest(e.target.value);
@@ -697,8 +804,21 @@ $('#search').addEventListener('keydown', e => {
 });
 // mousedown não tira o foco do campo; o clique escolhe
 drop.addEventListener('mousedown', e => e.preventDefault());
-drop.addEventListener('click', e => {
+drop.addEventListener('click', async e => {
+  const tab = e.target.closest('[data-source]');
+  if (tab) {
+    clearTimeout(searchTimer);
+    store.set('searchSource', tab.dataset.source);
+    dropTracks = [];
+    dropIndex = -1;
+    return suggest($('#search').value);
+  }
   const item = e.target.closest('.drop-item');
+  if (item && e.target.closest('[data-like]')) {
+    await toggleLike(dropTracks[+item.dataset.i]);
+    if (!drop.hidden && dropTracks.length) drawDrop();
+    return;
+  }
   if (item) pickFromDrop(+item.dataset.i);
   else if (e.target.closest('[data-all]')) pickFromDrop(-1);
 });
@@ -761,6 +881,7 @@ function onTrack() {
   const t = P.track;
   $('#pb-title').textContent = t.title;
   $('#pb-artist').textContent = t.artist;
+  $('#pb-artist').classList.toggle('link', !!t.artists?.length);
   if (t.art) $('#pb-art').src = t.art; else $('#pb-art').removeAttribute('src');
   host?.postMessage({ type: 'now', value: `${t.title} · ${t.artist}` });
 
@@ -806,6 +927,139 @@ seekEl.addEventListener('change', () => {
   seeking = false;
   if (P.dur) seek(seekEl.value / 1000 * P.dur);
 });
+
+$('#pb-artist').addEventListener('click', () => {
+  const artist = P.track?.artists?.[0];
+  if (artist) openArtist(artist.id, artist.name);
+});
+
+// Efeitos de áudio: nas faixas do Spotify quem processa o som é o motor; nas do YouTube, um script
+// dentro do iframe do player (yt-fx.js). Os dois recebem os mesmos valores.
+// Cada ajuste é um controle de 0 a 100; `applyFx` converte para as grandezas que o motor usa.
+// Cada efeito tem variações: pontos de partida para os ajustes (controles de 0 a 100) que a pessoa
+// pode mexer depois. `applyFx` converte os controles nas grandezas que o som usa.
+const FX = [
+  { id: '', name: 'Sem efeito', hint: 'Som original' },
+  {
+    id: 'muffled', name: 'Abafado', hint: 'Como no cômodo ao lado',
+    knobs: [['damp', 'Abafamento'], ['bass', 'Graves'], ['boost', 'Volume']],
+    variants: [
+      { id: 'room', name: 'Cômodo ao lado', damp: 58, bass: 75, boost: 30, steep: true },
+      { id: 'soft', name: 'Suave', damp: 24, bass: 100, boost: 10 },
+      { id: 'voice', name: 'Voz em destaque', damp: 12, bass: 20, boost: 35, steep: true },
+      { id: 'water', name: 'Debaixo d’água', damp: 74, bass: 100, boost: 40, steep: true, q: 2.5 },
+    ],
+  },
+  {
+    id: '8d', name: 'Áudio 8D', hint: 'Gira ao seu redor · use fones',
+    knobs: [['speed', 'Velocidade'], ['width', 'Abertura'], ['echo', 'Eco']],
+    variants: [
+      { id: 'classic', name: 'Clássico', speed: 65, width: 100, echo: 50 },
+      { id: 'slow', name: 'Órbita lenta', speed: 25, width: 100, echo: 60 },
+      { id: 'fast', name: 'Rápido', speed: 92, width: 90, echo: 30 },
+      { id: 'hop', name: 'Pingue-pongue', speed: 80, width: 100, echo: 35, hop: true },
+      { id: 'hall', name: 'Sala ampla', speed: 50, width: 70, echo: 95 },
+    ],
+  },
+];
+const fxPanel = $('#fx-panel');
+let fxOpen = ''; // efeito com os ajustes abertos (o painel mostra só ele)
+
+const fxVariant = fx => fx.variants.find(v => v.id === store.get('fxVariant', {})[fx.id]) || fx.variants[0];
+/** Ajustes em vigor de um efeito: os da variação escolhida, com o que a pessoa mudou por cima. */
+const fxKnobs = fx => ({ ...fxVariant(fx), ...store.get('fxTweaks', {})[fx.id] });
+const setTweaks = (id, tweaks) => store.set('fxTweaks', { ...store.get('fxTweaks', {}), [id]: tweaks });
+
+function applyFx() {
+  const muffled = fxKnobs(FX[1]);
+  const spin = fxKnobs(FX[2]);
+  const params = {
+    cutoff: 4000 * (150 / 4000) ** (muffled.damp / 100), // 4000 Hz (leve) … 150 Hz (bem abafado)
+    q: muffled.q || Math.SQRT1_2,
+    steep: !!muffled.steep,
+    hp: 400 * (1 - muffled.bass / 100),                  // menos graves = corte mais alto
+    gain: 1 + muffled.boost / 50,                        // 1× … 3×
+    turn: 20 - spin.speed * 0.17,                        // uma volta a cada 20 s … 3 s
+    depth: spin.width / 100,
+    echo: spin.echo / 100,
+    hop: !!spin.hop,
+  };
+  S.setFx(store.get('fx', ''), params);
+  setYouTubeFx(store.get('fx', ''), params);
+  $('#fx').classList.toggle('on', !!store.get('fx', ''));
+}
+
+function renderFx() {
+  const active = store.get('fx', '');
+  const editing = FX.find(fx => fx.id === fxOpen && fx.knobs);
+  if (editing) {
+    const k = fxKnobs(editing);
+    fxPanel.innerHTML = `
+      <header class="fx-head"><button class="ic" data-back title="${t('Voltar')}">${icon('expand')}</button>${t(editing.name)}</header>
+      <div class="fx-variants">${editing.variants.map(v => `<button class="chip${v.id === k.id ? ' on' : ''}" data-variant="${v.id}">${t(v.name)}</button>`).join('')}</div>
+      <div class="fx-knobs">
+        ${editing.knobs.map(([key, label]) => `<label><span>${t(label)}</span><input type="range" min="0" max="100" value="${k[key]}" data-knob="${key}"><output>${k[key]}</output></label>`).join('')}
+        <button class="btn small ghost" data-reset>${t('Restaurar padrão')}</button>
+      </div>`;
+  } else {
+    fxPanel.innerHTML = `<span class="eyebrow">${t('Efeitos de áudio')}</span>` + FX.map(fx => `
+      <div class="fx-row${fx.id === active ? ' on' : ''}">
+        <button class="fx-pick" data-fx="${fx.id}"><span class="fx-dot"></span><span class="lib-text"><b>${t(fx.name)}</b><small>${t(fx.variants ? fxVariant(fx).name : fx.hint)}</small></span></button>
+        ${fx.knobs ? `<button class="ic" data-gear="${fx.id}" title="${t('Ajustar efeito')}">${icon('tune')}</button>` : ''}
+      </div>`).join('');
+  }
+  for (const el of fxPanel.querySelectorAll('input')) paint(el);
+}
+
+function pickFx(id) {
+  store.set('fx', id);
+  applyFx();
+}
+
+$('#fx').addEventListener('click', () => {
+  if (!fxPanel.hidden) return void (fxPanel.hidden = true);
+  fxOpen = '';
+  renderFx();
+  fxPanel.hidden = false;
+  const bar = document.querySelector('.playerbar').getBoundingClientRect();
+  fxPanel.style.right = innerWidth - bar.right + 'px';
+  fxPanel.style.bottom = innerHeight - bar.top + 8 + 'px';
+});
+fxPanel.addEventListener('click', e => {
+  const { fx, gear, variant, reset, back } = e.target.closest('[data-fx], [data-gear], [data-variant], [data-reset], [data-back]')?.dataset || {};
+  if (fx != null) {
+    pickFx(fx);
+  } else if (gear) {
+    // abrir os ajustes já liga o efeito, para ouvir o que está mudando
+    fxOpen = gear;
+    if (store.get('fx', '') !== gear) pickFx(gear);
+  } else if (back != null) {
+    fxOpen = '';
+  } else if (variant) {
+    // trocar de variação recomeça dos ajustes dela
+    store.set('fxVariant', { ...store.get('fxVariant', {}), [fxOpen]: variant });
+    setTweaks(fxOpen, {});
+    applyFx();
+  } else if (reset != null) {
+    setTweaks(fxOpen, {});
+    applyFx();
+  } else {
+    return;
+  }
+  renderFx();
+});
+fxPanel.addEventListener('input', e => {
+  const key = e.target.dataset.knob;
+  if (!key) return;
+  setTweaks(fxOpen, { ...store.get('fxTweaks', {})[fxOpen], [key]: +e.target.value });
+  paint(e.target);
+  e.target.nextElementSibling.textContent = e.target.value;
+  applyFx();
+});
+document.addEventListener('pointerdown', e => {
+  if (!fxPanel.hidden && !e.target.closest('#fx-panel, #fx')) fxPanel.hidden = true;
+}, true);
+applyFx();
 
 volEl.value = Math.round(P.volume * 100);
 paint(volEl);
@@ -1009,6 +1263,7 @@ showOnboard('Iniciando…', false, false);
 S.start({
   status(state, user) {
     if (state === 'ready') {
+      applyFx(); // o motor acabou de subir (ou reiniciou) sem efeito
       store.del('guest');
       if (!inApp || guest) enterApp(user);
       return;

@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Download — ALL MUSIC</title>
+<meta name="description" content="Baixe o ALL MUSIC para Windows: um arquivo só, sem instalador. Veja a versão atual, como abrir pela primeira vez e como conferir o arquivo.">
+<link rel="icon" href="assets/logo.png">
+<style>
+@font-face { font-family: "Inter"; font-weight: 100 900; font-display: swap; src: url("assets/inter-latin-wght-normal.woff2") format("woff2-variations"); }
+@font-face { font-family: "Space Grotesk"; font-weight: 300 700; font-display: swap; src: url("assets/space-grotesk-latin-wght-normal.woff2") format("woff2-variations"); }
+
+:root {
+  --black: #080808; --background: #0B0B0C; --surface-1: #121214; --surface-2: #18181B; --surface-3: #202024;
+  --border: #29292E; --border-subtle: #1E1E22; --white: #F7F5F2;
+  --red: #F22C3D; --red-hover: #FF4050; --red-active: #D91F30; --red-soft: rgba(242, 44, 61, .12);
+  --text: #F7F5F2; --text-2: #B5B5BC; --text-3: #8C8C94; --success: #32D583;
+  --font-ui: "Inter", "Segoe UI", system-ui, sans-serif;
+  --font-display: "Space Grotesk", "Inter", "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--background); color: var(--text); font: 400 16px/24px var(--font-ui); -webkit-font-smoothing: antialiased; }
+h1, h2, h3, p, ol { margin: 0; }
+a { color: inherit; text-decoration: none; }
+:focus-visible { outline: 2px solid var(--white); outline-offset: 3px; }
+.i { width: 20px; height: 20px; flex: none; fill: none; }
+
+.wrap { width: min(880px, 100% - 32px); margin: 0 auto; }
+.eyebrow { font: 600 11px/15px var(--font-display); text-transform: uppercase; letter-spacing: .12em; color: var(--text-3); }
+.eyebrow.red { color: var(--red); }
+h1 { font: 700 clamp(40px, 6vw, 56px)/1.06 var(--font-display); letter-spacing: -.02em; }
+h2 { font: 700 26px/32px var(--font-ui); letter-spacing: -.02em; }
+h3 { font: 650 18px/24px var(--font-ui); letter-spacing: -.02em; }
+p, li { color: var(--text-2); }
+b, strong { color: var(--text); font-weight: 600; }
+.inline { color: var(--text); text-decoration: underline; text-decoration-color: var(--border); text-underline-offset: 3px; }
+.inline:hover { text-decoration-color: var(--red); }
+code { font: 500 13px/20px var(--font-mono); background: var(--black); border: 1px solid var(--border); border-radius: 8px; padding: 2px 8px; color: var(--text); overflow-wrap: anywhere; }
+pre { margin: 0; padding: 14px 16px; border-radius: 12px; background: var(--black); border: 1px solid var(--border); font: 500 13px/20px var(--font-mono); color: var(--text); overflow-x: auto; }
+
+/* topo: mesma pílula da página inicial */
+header { position: sticky; top: 12px; z-index: 5; padding: 0 16px; margin-top: 12px; }
+.nav { width: min(1180px, 100%); margin: 0 auto; height: 60px; padding: 0 10px 0 22px; display: flex; align-items: center; gap: 8px; background: var(--surface-1); border: 1px solid var(--border); border-radius: 999px; }
+.brand { display: flex; align-items: center; gap: 10px; font: 700 16px/20px var(--font-display); letter-spacing: -.01em; margin-right: auto; }
+.brand img { width: 26px; height: 26px; }
+.pill { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 18px; border-radius: 999px; font: 600 14px/20px var(--font-ui); white-space: nowrap; }
+.pill .i { width: 16px; height: 16px; }
+.pill.ghost { background: var(--surface-2); border: 1px solid var(--border); color: var(--text); }
+.pill.ghost:hover { background: var(--surface-3); }
+.pill.lang { padding: 0 8px 0 14px; gap: 4px; cursor: pointer; }
+.pill.lang select { appearance: none; background: none; border: 0; outline: 0; color: inherit; font: inherit; cursor: pointer; padding: 0 6px; }
+.pill.lang select option { background: var(--surface-2); color: var(--text); }
+
+main { padding: 56px 0 0; display: flex; flex-direction: column; gap: 12px; }
+.intro { display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px; }
+.intro p { font: 400 18px/28px var(--font-ui); max-width: 60ch; }
+.card { background: var(--surface-1); border: 1px solid var(--border-subtle); border-radius: 24px; padding: clamp(24px, 4vw, 36px); display: flex; flex-direction: column; gap: 16px; }
+.card.primary { background: var(--black); border-color: var(--border); }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 24px; justify-content: space-between; }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 20px; font: 500 13px/18px var(--font-ui); color: var(--text-3); }
+.cta { display: inline-flex; align-items: center; gap: 12px; height: 52px; padding: 0 8px 0 24px; border-radius: 999px; background: var(--red); color: var(--white); font: 600 13px/16px var(--font-display); text-transform: uppercase; letter-spacing: .12em; }
+.cta:hover { background: var(--red-hover); }
+.cta:active { background: var(--red-active); }
+.cta .dot { width: 36px; height: 36px; border-radius: 50%; background: var(--white); color: var(--black); display: grid; place-items: center; }
+.steps { padding: 0; list-style: none; display: flex; flex-direction: column; gap: 12px; counter-reset: step; }
+.steps li { counter-increment: step; position: relative; padding-left: 40px; }
+.steps li::before { content: counter(step); position: absolute; left: 0; top: 0; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-3); color: var(--text); font: 600 12px/16px var(--font-ui); }
+.hash { display: flex; gap: 8px; align-items: stretch; }
+.hash code { flex: 1; padding: 10px 12px; border-radius: 12px; user-select: all; }
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 0 14px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--border); font: 600 13px/18px var(--font-ui); color: var(--text); cursor: pointer; }
+.btn:hover { background: var(--surface-3); }
+.btn .i { width: 16px; height: 16px; }
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.soon { align-self: flex-start; padding: 4px 10px; border-radius: 999px; background: var(--surface-3); font: 600 11px/15px var(--font-ui); letter-spacing: .02em; color: var(--text-2); }
+
+footer { margin-top: 72px; border-top: 1px solid var(--border-subtle); padding: 28px 0 44px; font: 400 13px/20px var(--font-ui); color: var(--text-3); }
+footer p { color: var(--text-3); }
+
+@media (max-width: 640px) {
+  .grid2 { grid-template-columns: minmax(0, 1fr); }
+  .pill.gh { display: none; }
+  .hash { flex-direction: column; }
+  .btn { height: 40px; justify-content: center; }
+}
+</style>
+</head>
+<body>
+
+<!-- Ícones (Hugeicons). Este bloco é gerado por tools/build-assets.mjs: não edite à mão. -->
+<!-- icons:start --><svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="arrow" viewBox="0 0 24 24"><path d="M9 6.65032C9 6.65032 15.9383 6.10759 16.9154 7.08463C17.8924 8.06167 17.3496 15 17.3496 15M16.5 7.5L6.5 17.5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/></symbol><symbol id="download" viewBox="0 0 24 24"><path d="M16.9504 12.1817C17.1981 12.814 16.5076 13.5726 15.1267 15.0899C13.6702 16.6902 12.9201 17.4904 12 17.5C11.0799 17.4904 10.3298 16.6902 8.87331 15.0899C7.49239 13.5726 6.80193 12.814 7.04964 12.1817C7.05868 12.1586 7.06851 12.1359 7.0791 12.1135C7.34928 11.542 8.24477 11.5029 10 11.5002V4.99998C10 4.53501 10 4.30253 10.0511 4.11179C10.1898 3.59414 10.5941 3.1898 11.1118 3.05111C11.3025 3 11.535 3 12 3C12.4649 3 12.6974 3 12.8882 3.05111C13.4058 3.1898 13.8102 3.59414 13.9489 4.11179C14 4.30253 14 4.53501 14 4.99998V11.5002C15.7552 11.5029 16.6507 11.542 16.9209 12.1135C16.9315 12.1359 16.9413 12.1586 16.9504 12.1817Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/><path d="M5.00006 21H19.0001" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/></symbol><symbol id="globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/><path d="M8 12C8 18 12 22 12 22C12 22 16 18 16 12C16 6 12 2 12 2C12 2 8 6 8 12Z" stroke="currentColor" stroke-linejoin="round" stroke-width="1.5"/><path d="M21 15H3" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/><path d="M21 9H3" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/></symbol><symbol id="logout" viewBox="0 0 24 24"><path d="M15.5 8.04045C15.4588 6.87972 15.3216 6.15451 14.8645 5.58671C14.2114 4.77536 13.0944 4.52064 10.8605 4.01121L9.85915 3.78286C6.4649 3.00882 4.76777 2.6218 3.63388 3.51317C2.5 4.40454 2.5 6.1257 2.5 9.56803V14.432C2.5 17.8743 2.5 19.5955 3.63388 20.4868C4.76777 21.3782 6.4649 20.9912 9.85915 20.2171L10.8605 19.9888C13.0944 19.4794 14.2114 19.2246 14.8645 18.4133C15.3216 17.8455 15.4588 17.1203 15.5 15.9595" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/><path d="M18.5 9.01172C18.5 9.01172 21.5 11.2212 21.5 12.0117C21.5 12.8023 18.5 15.0117 18.5 15.0117M21 12.0117H8.49998" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/></symbol><symbol id="check" viewBox="0 0 24 24"><path d="M5 14L8.5 17.5L19 6.5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/></symbol><symbol id="search" viewBox="0 0 24 24"><path d="M17 17L21 21" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/><path d="M19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19C15.4183 19 19 15.4183 19 11Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/></symbol><symbol id="heart" viewBox="0 0 24 24"><path d="M10.4107 19.9677C7.58942 17.858 2 13.0348 2 8.69444C2 5.82563 4.10526 3.5 7 3.5C8.5 3.5 10 4 12 6C14 4 15.5 3.5 17 3.5C19.8947 3.5 22 5.82563 22 8.69444C22 13.0348 16.4106 17.858 13.5893 19.9677C12.6399 20.6776 11.3601 20.6776 10.4107 19.9677Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/></symbol><symbol id="prev" viewBox="0 0 24 24"><path d="M8.06492 12.6258C8.31931 13.8374 9.67295 14.7077 12.3802 16.4481C15.3247 18.3411 16.797 19.2876 17.9895 18.9229C18.3934 18.7994 18.7654 18.5823 19.0777 18.2876C20 17.4178 20 15.6118 20 12C20 8.38816 20 6.58224 19.0777 5.71235C18.7654 5.41773 18.3934 5.20057 17.9895 5.07707C16.797 4.71243 15.3247 5.6589 12.3802 7.55186C9.67295 9.29233 8.31931 10.1626 8.06492 11.3742C7.97836 11.7865 7.97836 12.2135 8.06492 12.6258Z" stroke="currentColor" stroke-linejoin="round" stroke-width="1.5"/><path d="M4 4L4 20" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"/></symbol><symbol id="next" viewBox="0 0 24 24"><path d="M15.9351 12.6258C15.6807 13.8374 14.327 14.7077 11.6198 16.4481C8.67528 18.3411 7.20303 19.2876 6.01052 18.9229C5.60662 18.7994 5.23463 18.5823 4.92227 18.2876C4 17.4178 4 15.6118 4 12C4 8.38816 4 6.58224 4.92227 5.71235C5.23463 5.41773 5.60662 5.20057 6.01052 5.07707C7.20304 4.71243 8.67528 5.6589 11.6198 7.55186C14.327 9.29233 15.6807 10.1626 15.9351 11.3742C16.0216 11.7865 16.0216 12.2135 15.9351 12.6258Z" stroke="currentColor" stroke-linejoin="round" stroke-width="1.5"/><path d="M20 5V19" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"/></symbol><symbol id="pause" viewBox="0 0 24 24"><path d="M4 7C4 5.58579 4 4.87868 4.43934 4.43934C4.87868 4 5.58579 4 7 4C8.41421 4 9.12132 4 9.56066 4.43934C10 4.87868 10 5.58579 10 7V17C10 18.4142 10 19.1213 9.56066 19.5607C9.12132 20 8.41421 20 7 20C5.58579 20 4.87868 20 4.43934 19.5607C4 19.1213 4 18.4142 4 17V7Z" stroke="currentColor" stroke-width="1.5"/><path d="M14 7C14 5.58579 14 4.87868 14.4393 4.43934C14.8787 4 15.5858 4 17 4C18.4142 4 19.1213 4 19.5607 4.43934C20 4.87868 20 5.58579 20 7V17C20 18.4142 20 19.1213 19.5607 19.5607C19.1213 20 18.4142 20 17 20C15.5858 20 14.8787 20 14.4393 19.5607C14 19.1213 14 18.4142 14 17V7Z" stroke="currentColor" stroke-width="1.5"/></symbol><symbol id="close" viewBox="0 0 24 24"><path d="M18 6L6.00081 17.9992M17.9992 18L6 6.00085" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/></symbol><symbol id="win-min" viewBox="0 0 24 24"><path d="M20 12L4 12" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/></symbol><symbol id="win-max" viewBox="0 0 24 24"><path d="M2.5 12C2.5 7.52166 2.5 5.28249 3.89124 3.89124C5.28249 2.5 7.52166 2.5 12 2.5C16.4783 2.5 18.7175 2.5 20.1088 3.89124C21.5 5.28249 21.5 7.52166 21.5 12C21.5 16.4783 21.5 18.7175 20.1088 20.1088C18.7175 21.5 16.4783 21.5 12 21.5C7.52166 21.5 5.28249 21.5 3.89124 20.1088C2.5 18.7175 2.5 16.4783 2.5 12Z" stroke="currentColor" stroke-width="1.5"/></symbol><symbol id="queue" viewBox="0 0 24 24"><path d="M3 15C3 12.1911 3 10.7866 3.67412 9.77772C3.96596 9.34096 4.34096 8.96596 4.77772 8.67412C5.78661 8 7.19108 8 10 8H14C16.8089 8 18.2134 8 19.2223 8.67412C19.659 8.96596 20.034 9.34096 20.3259 9.77772C21 10.7866 21 12.1911 21 15C21 17.8089 21 19.2134 20.3259 20.2223C20.034 20.659 19.659 21.034 19.2223 21.3259C18.2134 22 16.8089 22 14 22H10C7.19108 22 5.78661 22 4.77772 21.3259C4.34096 21.034 3.96596 20.659 3.67412 20.2223C3 19.2134 3 17.8089 3 15Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/><path d="M12.5 16.5C12.5 17.3284 11.8284 18 11 18C10.1716 18 9.5 17.3284 9.5 16.5C9.5 15.6716 10.1716 15 11 15C11.8284 15 12.5 15.6716 12.5 16.5ZM12.5 16.5V11.5C12.5 11.5 12.9 13.2333 14.5 13.5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/><path d="M19 8C18.9821 6.76022 18.89 6.05733 18.4182 5.58579C17.8321 5 16.8888 5 15.0022 5H8.99783C7.11118 5 6.16786 5 5.58176 5.58579C5.10996 6.05733 5.01794 6.76022 5 8" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/><path d="M17 5C17 4.06812 17 3.60218 16.8478 3.23463C16.6448 2.74458 16.2554 2.35523 15.7654 2.15224C15.3978 2 14.9319 2 14 2H10C9.06812 2 8.60218 2 8.23463 2.15224C7.74458 2.35523 7.35523 2.74458 7.15224 3.23463C7 3.60218 7 4.06812 7 5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/></symbol><symbol id="headphones" viewBox="0 0 24 24"><path d="M20.0849 17C20.5849 15.5 21 13.4368 21 12C21 7.02944 16.9706 3 12 3C7.02944 3 3 7.02944 3 12C3 13.4368 3.41512 15.5 3.91512 17" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/><path d="M8.97651 19.6043L7.23857 14.6127C7.05341 14.1466 6.4617 13.9131 5.97493 14.0297C4.46441 14.5333 3.6462 16.1718 4.14742 17.6895L4.58543 19.0158C5.08664 20.5334 6.71747 21.3555 8.22799 20.8519C8.68896 20.6556 9.10449 20.0897 8.97651 19.6043Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/><path d="M15.0235 19.6043L16.7614 14.6127C16.9466 14.1466 17.5383 13.9131 18.0251 14.0297C19.5356 14.5333 20.3538 16.1718 19.8526 17.6895L19.4146 19.0158C18.9134 20.5334 17.2825 21.3555 15.772 20.8519C15.311 20.6556 14.8955 20.0897 15.0235 19.6043Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/></symbol><symbol id="game" viewBox="0 0 24 24"><path d="M2.00825 15.8092C2.23114 12.3161 2.88737 9.7599 3.44345 8.27511C3.72419 7.5255 4.32818 6.96728 5.10145 6.78021C9.40147 5.73993 14.5986 5.73993 18.8986 6.78021C19.6719 6.96728 20.2759 7.5255 20.5566 8.27511C21.1127 9.7599 21.7689 12.3161 21.9918 15.8092C22.1251 17.8989 20.6148 19.0503 18.9429 19.8925C17.878 20.4289 17.0591 18.8457 16.5155 17.6203C16.2185 16.9508 15.5667 16.5356 14.8281 16.5356H9.17196C8.43331 16.5356 7.78158 16.9508 7.48456 17.6203C6.94089 18.8457 6.122 20.4289 5.05711 19.8925C3.40215 19.0588 1.87384 17.9157 2.00825 15.8092Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/><path d="M5 4.5L6.96285 4M19 4.5L17 4" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/><path d="M9 13L7.5 11.5M7.5 11.5L6 10M7.5 11.5L6 13M7.5 11.5L9 10" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"/><path d="M15.9881 10H15.9971" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/><path d="M17.9881 13H17.9971" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/></symbol><symbol id="cursor" viewBox="0 0 24 24"><path d="M12.0033 19.4056L9.88486 13.3197L9.88485 13.3197C9.08816 11.031 8.68981 9.88664 9.28857 9.28834C9.88733 8.69005 11.0326 9.08809 13.3231 9.88417L19.401 11.9966C20.6716 12.4382 21.3069 12.659 21.4441 13.0867C21.4819 13.2045 21.4949 13.329 21.4824 13.4521C21.4369 13.8989 20.8612 14.2464 19.7097 14.9415C18.9714 15.3872 18.6023 15.61 18.5039 15.9462C18.476 16.0414 18.4641 16.1405 18.4686 16.2396C18.4845 16.5896 18.7902 16.8935 19.4018 17.5012L21.4116 19.4988L21.4117 19.4988C21.7125 19.7979 21.863 19.9474 21.932 20.1147C22.0223 20.3335 22.0227 20.5792 21.9329 20.7983C21.8644 20.9657 21.7143 21.1157 21.4142 21.4155L21.4142 21.4156C21.1148 21.7147 20.9652 21.8642 20.7979 21.9328C20.5791 22.0224 20.3337 22.0224 20.1149 21.9328C19.9476 21.8642 19.7979 21.7147 19.4986 21.4156L19.4986 21.4155L17.4812 19.3998L17.4812 19.3998C16.8797 18.7987 16.5789 18.4982 16.2338 18.4802C16.1293 18.4747 16.0247 18.4875 15.9246 18.5179C15.594 18.6185 15.3745 18.9825 14.9355 19.7106L14.9355 19.7106C14.2491 20.8492 13.9059 21.4185 13.4653 21.4686C13.3353 21.4833 13.2037 21.4696 13.0796 21.4284C12.6588 21.2887 12.4403 20.661 12.0033 19.4056Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/><path d="M10.8576 7.08329C11.0714 7.43808 11.5323 7.55239 11.8871 7.33861C12.2419 7.12483 12.3562 6.66392 12.1424 6.30913L10.8576 7.08329ZM6.30914 12.1424C6.66392 12.3562 7.12483 12.2419 7.33861 11.8871C7.55239 11.5323 7.43808 11.0714 7.08329 10.8576L6.30914 12.1424ZM5.75 8.5C5.75 6.98122 6.98123 5.75 8.5 5.75V4.25C6.15281 4.25 4.25 6.15279 4.25 8.5H5.75ZM8.5 5.75C9.49944 5.75 10.3752 6.28272 10.8576 7.08329L12.1424 6.30913C11.3999 5.07687 10.0469 4.25 8.5 4.25V5.75ZM7.08329 10.8576C6.28272 10.3752 5.75 9.49945 5.75 8.5H4.25C4.25 10.0469 5.07688 11.3999 6.30914 12.1424L7.08329 10.8576Z" fill="currentColor"/><path d="M14.2515 8.13498C14.2778 8.54836 14.6342 8.86216 15.0476 8.83587C15.461 8.80958 15.7748 8.45316 15.7485 8.03979L14.2515 8.13498ZM8.04118 15.7485C8.45457 15.7747 8.81093 15.4608 8.83714 15.0475C8.86335 14.6341 8.54948 14.2777 8.1361 14.2515L8.04118 15.7485ZM2.75 8.50661C2.75 5.32733 5.32736 2.75 8.50664 2.75V1.25C4.49895 1.25 1.25 4.49889 1.25 8.50661H2.75ZM8.50664 2.75C11.561 2.75 14.0604 5.12926 14.2515 8.13498L15.7485 8.03979C15.5074 4.24925 12.3576 1.25 8.50664 1.25V2.75ZM8.1361 14.2515C5.12986 14.0609 2.75 11.5614 2.75 8.50661H1.25C1.25 12.358 4.25002 15.5081 8.04118 15.7485L8.1361 14.2515Z" fill="currentColor"/></symbol><symbol id="lock" viewBox="0 0 24 24"><path d="M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="currentColor" stroke-width="1.5"/><path d="M12 13C13.1046 13 14 12.1046 14 11C14 9.89543 13.1046 9 12 9C10.8954 9 10 9.89543 10 11C10 12.1046 10.8954 13 12 13ZM12 13L12 16" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"/></symbol><symbol id="drive" viewBox="0 0 24 24"><path d="M20.7104 8.70122L21.9186 12.7288C21.9578 12.8592 21.9773 12.9244 21.9879 12.9914L21.9908 13.0118C22 13.079 22 13.147 22 13.2831C22 16.7797 22 18.528 20.9812 19.6669C20.8824 19.7774 20.7774 19.8824 20.6669 19.9812C19.528 21 17.7797 21 14.2831 21H9.71685C6.22026 21 4.47197 21 3.33311 19.9812C3.22259 19.8824 3.11765 19.7774 3.01877 19.6669C2 18.528 2 16.7797 2 13.2831C2 13.147 2 13.079 2.00915 13.0118L2.01215 12.9914C2.02269 12.9244 2.04225 12.8592 2.08136 12.7288L3.28963 8.70122C4.11355 5.95484 4.5255 4.58166 5.5884 3.79083C6.6513 3 8.08495 3 10.9522 3H13.0478C15.9151 3 17.3487 3 18.4116 3.79083C19.4745 4.58166 19.8865 5.95484 20.7104 8.70122Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/><path d="M2 13H22" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/><path d="M18.125 17H18M14.125 17H14M18.25 17C18.25 17.1381 18.1381 17.25 18 17.25C17.8619 17.25 17.75 17.1381 17.75 17C17.75 16.8619 17.8619 16.75 18 16.75C18.1381 16.75 18.25 16.8619 18.25 17ZM14.25 17C14.25 17.1381 14.1381 17.25 14 17.25C13.8619 17.25 13.75 17.1381 13.75 17C13.75 16.8619 13.8619 16.75 14 16.75C14.1381 16.75 14.25 16.8619 14.25 17Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/></symbol><symbol id="cloud-off" viewBox="0 0 24 24"><path d="M5 5C3.14864 6.79995 2 9.3082 2 12.0825C2 17.5598 6.47715 22 12 22C14.7255 22 17.1962 20.9187 19 19.165" stroke="currentColor" stroke-width="1.5"/><path d="M15.5 16C14.8828 19.5318 13.6403 22 12 22C9.79086 22 8 17.5228 8 12C8 10.7687 8.08902 9.58934 8.25184 8.5" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"/><path d="M2 12H12" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/><path d="M7.16204 2.39775C6.79227 2.5844 6.64381 3.03547 6.83046 3.40525C7.01711 3.77503 7.46818 3.92348 7.83796 3.73683L7.16204 2.39775ZM20.2627 16.1619C20.076 16.5317 20.2244 16.9828 20.5941 17.1695C20.9639 17.3562 21.415 17.2078 21.6017 16.8381L20.2627 16.1619ZM16 12H15.25C15.25 12.4142 15.5858 12.75 16 12.75V12ZM8.30261 4.7262C8.1514 5.11183 8.34143 5.54702 8.72705 5.69824C9.11268 5.84945 9.54787 5.65942 9.69909 5.2738L8.30261 4.7262ZM12 2.75C17.1086 2.75 21.25 6.89137 21.25 12H22.75C22.75 6.06294 17.9371 1.25 12 1.25V2.75ZM7.83796 3.73683C9.08814 3.10579 10.5014 2.75 12 2.75V1.25C10.2613 1.25 8.61705 1.66333 7.16204 2.39775L7.83796 3.73683ZM21.25 12C21.25 13.4986 20.894 14.9118 20.2627 16.1619L21.6017 16.8381C22.3363 15.3831 22.75 13.7389 22.75 12H21.25ZM12 2.75C12.2796 2.75 12.6219 2.88858 13.0121 3.30118C13.4038 3.71536 13.7911 4.35495 14.1321 5.20748C14.8124 6.90837 15.25 9.30957 15.25 12H16.75C16.75 9.16759 16.2921 6.56878 15.5248 4.65039C15.1419 3.69327 14.6673 2.86839 14.1019 2.27052C13.535 1.67106 12.825 1.25 12 1.25V2.75ZM9.69909 5.2738C10.0345 4.41855 10.4545 3.76449 10.8831 3.33637C11.3161 2.90388 11.7049 2.75 12 2.75V1.25C11.1762 1.25 10.4284 1.67044 9.82303 2.27511C9.21329 2.88415 8.69322 3.73009 8.30261 4.7262L9.69909 5.2738ZM16 12.75H22V11.25H16V12.75Z" fill="currentColor"/><path d="M2 2L22.0004 22.0004" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/></symbol><symbol id="github" viewBox="0 0 24 24"><path d="M10 20.5675C6.57143 21.7248 3.71429 20.5675 2 17" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/><path d="M10 22V18.7579C10 18.1596 10.1839 17.6396 10.4804 17.1699C10.6838 16.8476 10.5445 16.3904 10.1771 16.2894C7.13394 15.4528 5 14.1077 5 9.64606C5 8.48611 5.38005 7.39556 6.04811 6.4464C6.21437 6.21018 6.29749 6.09208 6.31748 5.9851C6.33746 5.87813 6.30272 5.73852 6.23322 5.45932C5.95038 4.32292 5.96871 3.11619 6.39322 2.02823C6.39322 2.02823 7.27042 1.74242 9.26698 2.98969C9.72282 3.27447 9.95075 3.41686 10.1515 3.44871C10.3522 3.48056 10.6206 3.41384 11.1573 3.28041C11.8913 3.09795 12.6476 3 13.5 3C14.3524 3 15.1087 3.09795 15.8427 3.28041C16.3794 3.41384 16.6478 3.48056 16.8485 3.44871C17.0493 3.41686 17.2772 3.27447 17.733 2.98969C19.7296 1.74242 20.6068 2.02823 20.6068 2.02823C21.0313 3.11619 21.0496 4.32292 20.7668 5.45932C20.6973 5.73852 20.6625 5.87813 20.6825 5.9851C20.7025 6.09207 20.7856 6.21019 20.9519 6.4464C21.6199 7.39556 22 8.48611 22 9.64606C22 14.1077 19.8661 15.4528 16.8229 16.2894C16.4555 16.3904 16.3162 16.8476 16.5196 17.1699C16.8161 17.6396 17 18.1596 17 18.7579V22" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/></symbol><symbol id="eye" viewBox="0 0 24 24"><path d="M21.544 11.045C21.848 11.4713 22 11.6845 22 12C22 12.3155 21.848 12.5287 21.544 12.955C20.1779 14.8706 16.6892 19 12 19C7.31078 19 3.8221 14.8706 2.45604 12.955C2.15201 12.5287 2 12.3155 2 12C2 11.6845 2.15201 11.4713 2.45604 11.045C3.8221 9.12944 7.31078 5 12 5C16.6892 5 20.1779 9.12944 21.544 11.045Z" stroke="currentColor" stroke-width="1.5"/><path d="M15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15C13.6569 15 15 13.6569 15 12Z" stroke="currentColor" stroke-width="1.5"/></symbol><symbol id="copy" viewBox="0 0 24 24"><path d="M7.5 14.5C7.5 11.2002 7.5 9.55025 8.52513 8.52513C9.55025 7.5 11.2002 7.5 14.5 7.5C17.7998 7.5 19.4497 7.5 20.4749 8.52513C21.5 9.55025 21.5 11.2002 21.5 14.5C21.5 17.7998 21.5 19.4497 20.4749 20.4749C19.4497 21.5 17.7998 21.5 14.5 21.5C11.2002 21.5 9.55025 21.5 8.52513 20.4749C7.5 19.4497 7.5 17.7998 7.5 14.5Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/><path d="M7.5 16.5C6.10355 16.5 5.40533 16.5 4.84402 16.3036C3.83866 15.9518 3.0482 15.1613 2.69641 14.156C2.5 13.5947 2.5 12.8964 2.5 11.5V9.5C2.5 6.20017 2.5 4.55025 3.52513 3.52513C4.55025 2.5 6.20017 2.5 9.5 2.5H11.5C12.8964 2.5 13.5947 2.5 14.156 2.69641C15.1613 3.0482 15.9518 3.83866 16.3036 4.84402C16.5 5.40533 16.5 6.10355 16.5 7.5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/></symbol><symbol id="fx" viewBox="0 0 24 24"><path d="M13.9258 12.7775L11.7775 10.6292C11.4847 10.3364 11.3383 10.19 11.1803 10.1117C10.8798 9.96277 10.527 9.96277 10.2264 10.1117C10.0685 10.19 9.92207 10.3364 9.62923 10.6292C9.33638 10.9221 9.18996 11.0685 9.11169 11.2264C8.96277 11.527 8.96277 11.8798 9.11169 12.1803C9.18996 12.3383 9.33638 12.4847 9.62923 12.7775L11.7775 14.9258M13.9258 12.7775L20.3708 19.2225C20.6636 19.5153 20.81 19.6617 20.8883 19.8197C21.0372 20.1202 21.0372 20.473 20.8883 20.7736C20.81 20.9315 20.6636 21.0779 20.3708 21.3708C20.0779 21.6636 19.9315 21.81 19.7736 21.8883C19.473 22.0372 19.1202 22.0372 18.8197 21.8883C18.6617 21.81 18.5153 21.6636 18.2225 21.3708L11.7775 14.9258M13.9258 12.7775L11.7775 14.9258" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/><path d="M17 2L17.2948 2.7966C17.6813 3.84117 17.8746 4.36345 18.2556 4.74445C18.6366 5.12545 19.1588 5.31871 20.2034 5.70523L21 6L20.2034 6.29477C19.1588 6.68129 18.6366 6.87456 18.2556 7.25555C17.8746 7.63655 17.6813 8.15883 17.2948 9.2034L17 10L16.7052 9.2034C16.3187 8.15884 16.1254 7.63655 15.7444 7.25555C15.3634 6.87455 14.8412 6.68129 13.7966 6.29477L13 6L13.7966 5.70523C14.8412 5.31871 15.3634 5.12545 15.7444 4.74445C16.1254 4.36345 16.3187 3.84117 16.7052 2.7966L17 2Z" stroke="currentColor" stroke-linejoin="round" stroke-width="1.5"/><path d="M6 4L6.22108 4.59745C6.51097 5.38087 6.65592 5.77259 6.94167 6.05834C7.22741 6.34408 7.61913 6.48903 8.40255 6.77892L9 7L8.40255 7.22108C7.61913 7.51097 7.22741 7.65592 6.94166 7.94167C6.65592 8.22741 6.51097 8.61913 6.22108 9.40255L6 10L5.77892 9.40255C5.48903 8.61913 5.34408 8.22741 5.05833 7.94167C4.77259 7.65592 4.38087 7.51097 3.59745 7.22108L3 7L3.59745 6.77892C4.38087 6.48903 4.77259 6.34408 5.05833 6.05833C5.34408 5.77259 5.48903 5.38087 5.77892 4.59745L6 4Z" stroke="currentColor" stroke-linejoin="round" stroke-width="1.5"/></symbol><symbol id="artist" viewBox="0 0 24 24"><path d="M20 21.0001C19.713 17.269 16.7289 14.3151 12.995 14.0662L12 13.9999C11.6446 14.0096 11.3134 14.0225 11.0008 14.0378C7.3 14.2192 4.28417 17.3057 4 21.0001" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/><circle cx="12" cy="6.99988" r="4" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/></symbol><symbol id="chart" viewBox="0 0 24 24"><path d="M7 17L7 13" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"/><path d="M12 17L12 7" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"/><path d="M17 17L17 11" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"/><path d="M2.5 12C2.5 7.52166 2.5 5.28249 3.89124 3.89124C5.28249 2.5 7.52166 2.5 12 2.5C16.4783 2.5 18.7175 2.5 20.1088 3.89124C21.5 5.28249 21.5 7.52166 21.5 12C21.5 16.4783 21.5 18.7175 20.1088 20.1088C18.7175 21.5 16.4783 21.5 12 21.5C7.52166 21.5 5.28249 21.5 3.89124 20.1088C2.5 18.7175 2.5 16.4783 2.5 12Z" stroke="currentColor" stroke-linejoin="round" stroke-width="1.5"/></symbol></svg><!-- icons:end -->
+
+<header>
+  <nav class="nav">
+    <a class="brand" href="./"><img src="assets/logo.png" alt="">ALL MUSIC</a>
+    <label class="pill ghost lang"><svg class="i"><use href="#globe"/></svg>
+      <select id="lang" aria-label="Idioma">
+        <option value="pt">PT</option>
+        <option value="en">EN</option>
+        <option value="es">ES</option>
+      </select>
+    </label>
+    <a class="pill ghost gh" href="https://github.com/Artxxx3/allmusic" target="_blank" rel="noopener"><svg class="i"><use href="#github"/></svg>GitHub</a>
+  </nav>
+</header>
+
+<main class="wrap">
+
+  <div class="intro">
+    <span class="eyebrow red">Download</span>
+    <h1>Baixar o ALL MUSIC</h1>
+    <p>Um arquivo só, sem instalador. Gratuito e de código aberto.</p>
+  </div>
+
+  <section class="card primary">
+    <div class="row">
+      <div>
+        <h2>Windows</h2>
+        <div class="meta" style="margin-top:8px">
+          <span id="version">Versão mais recente</span>
+          <span id="size"></span>
+          <span id="date"></span>
+          <span>Windows 10 e 11, 64 bits</span>
+        </div>
+      </div>
+      <a class="cta" href="https://github.com/Artxxx3/allmusic/releases/latest/download/allmusic.exe">Baixar para Windows<span class="dot"><svg class="i"><use href="#download"/></svg></span></a>
+    </div>
+    <p>Baixe o <code>allmusic.exe</code> e abra. Não há nada para instalar antes, e o app não pede senha de administrador.</p>
+  </section>
+
+  <section class="card">
+    <h2>Primeira vez que você abrir</h2>
+    <p>O arquivo ainda não tem assinatura digital, então o Windows mostra um aviso na primeira execução. É esperado:</p>
+    <ol class="steps">
+      <li>Abra o <code>allmusic.exe</code>.</li>
+      <li>Se aparecer a tela azul “O Windows protegeu o computador”, clique em <b>Mais informações</b>.</li>
+      <li>Clique em <b>Executar assim mesmo</b>.</li>
+    </ol>
+    <p>O aviso aparece porque o Windows não conhece o editor do programa, não porque encontrou algo no arquivo. Se preferir não confiar no arquivo pronto, confira a assinatura abaixo ou compile a partir do código.</p>
+  </section>
+
+  <section class="card">
+    <h2>Conferir o arquivo</h2>
+    <p>O SHA-256 abaixo é o do arquivo publicado. Se o do seu download for igual, ele não foi alterado no caminho.</p>
+    <div class="hash">
+      <code id="sha">Veja o valor na página da versão no GitHub.</code>
+      <button class="btn" id="copy-sha" hidden><svg class="i"><use href="#copy"/></svg><span>Copiar</span></button>
+    </div>
+    <p>Para calcular o do arquivo que você baixou, abra o PowerShell na pasta de downloads e rode:</p>
+    <pre>Get-FileHash allmusic.exe -Algorithm SHA256</pre>
+  </section>
+
+  <div class="grid2">
+    <section class="card">
+      <h3>Compilar você mesmo</h3>
+      <p>O código inteiro está no GitHub, sob licença MIT, com o passo a passo para gerar o mesmo <code>allmusic.exe</code>.</p>
+      <p><a class="inline" href="https://github.com/Artxxx3/allmusic#build-from-source" target="_blank" rel="noopener">Instruções de compilação</a></p>
+    </section>
+    <section class="card">
+      <h3>Versões anteriores</h3>
+      <p>Todas as versões publicadas, com as notas de cada uma, ficam na página de releases.</p>
+      <p><a class="inline" href="https://github.com/Artxxx3/allmusic/releases" target="_blank" rel="noopener">Ver todas as versões</a></p>
+    </section>
+  </div>
+
+  <div class="grid2">
+    <section class="card">
+      <span class="soon">Em desenvolvimento</span>
+      <h3>macOS</h3>
+      <p>Ainda não há versão para Mac. Acompanhe o repositório para saber quando sair.</p>
+    </section>
+    <section class="card">
+      <span class="soon">Em desenvolvimento</span>
+      <h3>Linux</h3>
+      <p>Ainda não há versão para Linux. Acompanhe o repositório para saber quando sair.</p>
+    </section>
+  </div>
+
+  <section class="card">
+    <h2>Remover o app</h2>
+    <p>Não há desinstalador porque nada é instalado. Feche o ALL MUSIC pelo ícone da bandeja, apague o <code>allmusic.exe</code> e, se quiser remover também seus dados locais, apague a pasta <code>%LOCALAPPDATA%\allmusic</code>.</p>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>ALL MUSIC é um projeto independente de código aberto. Não é afiliado, patrocinado nem endossado pelo Spotify ou pelo YouTube. A reprodução do Spotify exige conta Premium.</p>
+  </div>
+</footer>
+
+<script>
+const REPO = 'Artxxx3/allmusic';
+
+// Idiomas: o HTML está em português, e cada texto em português é a chave da tradução.
+const TRANSLATIONS = {
+  "en": {
+    "Download — ALL MUSIC": "Download — ALL MUSIC",
+    "Baixe o ALL MUSIC para Windows: um arquivo só, sem instalador. Veja a versão atual, como abrir pela primeira vez e como conferir o arquivo.": "Download ALL MUSIC for Windows: a single file, no installer. See the current version, how to open it the first time and how to verify the file.",
+    "Idioma": "Language",
+    "Baixar o ALL MUSIC": "Download ALL MUSIC",
+    "Um arquivo só, sem instalador. Gratuito e de código aberto.": "A single file, no installer. Free and open source.",
+    "Versão mais recente": "Latest version",
+    "Windows 10 e 11, 64 bits": "Windows 10 and 11, 64-bit",
+    "Baixar para Windows": "Download for Windows",
+    "Baixe o": "Download",
+    "e abra. Não há nada para instalar antes, e o app não pede senha de administrador.": "and open it. There is nothing to install first, and the app does not ask for an administrator password.",
+    "Primeira vez que você abrir": "The first time you open it",
+    "O arquivo ainda não tem assinatura digital, então o Windows mostra um aviso na primeira execução. É esperado:": "The file is not digitally signed yet, so Windows shows a warning on first run. This is expected:",
+    "Abra o": "Open",
+    "Se aparecer a tela azul “O Windows protegeu o computador”, clique em": "If the blue “Windows protected your PC” screen appears, click",
+    "Mais informações": "More info",
+    "Clique em": "Click",
+    "Executar assim mesmo": "Run anyway",
+    "O aviso aparece porque o Windows não conhece o editor do programa, não porque encontrou algo no arquivo. Se preferir não confiar no arquivo pronto, confira a assinatura abaixo ou compile a partir do código.": "The warning appears because Windows does not know the publisher, not because it found something in the file. If you would rather not trust the ready-made file, check the hash below or build from source.",
+    "Conferir o arquivo": "Verify the file",
+    "O SHA-256 abaixo é o do arquivo publicado. Se o do seu download for igual, ele não foi alterado no caminho.": "The SHA-256 below belongs to the published file. If your download has the same one, it was not changed along the way.",
+    "Veja o valor na página da versão no GitHub.": "See the value on the release page on GitHub.",
+    "Para calcular o do arquivo que você baixou, abra o PowerShell na pasta de downloads e rode:": "To compute it for the file you downloaded, open PowerShell in your downloads folder and run:",
+    "Compilar você mesmo": "Build it yourself",
+    "O código inteiro está no GitHub, sob licença MIT, com o passo a passo para gerar o mesmo": "The entire code is on GitHub, under the MIT license, with the steps to produce the same",
+    "Instruções de compilação": "Build instructions",
+    "Versões anteriores": "Older versions",
+    "Todas as versões publicadas, com as notas de cada uma, ficam na página de releases.": "Every published version, with its notes, is on the releases page.",
+    "Ver todas as versões": "See all versions",
+    "Em desenvolvimento": "In development",
+    "Ainda não há versão para Mac. Acompanhe o repositório para saber quando sair.": "There is no Mac version yet. Watch the repository to know when it ships.",
+    "Ainda não há versão para Linux. Acompanhe o repositório para saber quando sair.": "There is no Linux version yet. Watch the repository to know when it ships.",
+    "Remover o app": "Remove the app",
+    "Não há desinstalador porque nada é instalado. Feche o ALL MUSIC pelo ícone da bandeja, apague o": "There is no uninstaller because nothing is installed. Quit ALL MUSIC from the tray icon, delete",
+    "e, se quiser remover também seus dados locais, apague a pasta": "and, if you also want to remove your local data, delete the folder",
+    "ALL MUSIC é um projeto independente de código aberto. Não é afiliado, patrocinado nem endossado pelo Spotify ou pelo YouTube. A reprodução do Spotify exige conta Premium.": "ALL MUSIC is an independent open-source project. It is not affiliated with, sponsored by or endorsed by Spotify or YouTube. Spotify playback requires a Premium account."
+  },
+  "es": {
+    "Download — ALL MUSIC": "Descarga — ALL MUSIC",
+    "Baixe o ALL MUSIC para Windows: um arquivo só, sem instalador. Veja a versão atual, como abrir pela primeira vez e como conferir o arquivo.": "Descarga ALL MUSIC para Windows: un solo archivo, sin instalador. Consulta la versión actual, cómo abrirlo por primera vez y cómo verificar el archivo.",
+    "Idioma": "Idioma",
+    "Baixar o ALL MUSIC": "Descargar ALL MUSIC",
+    "Um arquivo só, sem instalador. Gratuito e de código aberto.": "Un solo archivo, sin instalador. Gratis y de código abierto.",
+    "Versão mais recente": "Última versión",
+    "Windows 10 e 11, 64 bits": "Windows 10 y 11, 64 bits",
+    "Baixar para Windows": "Descargar para Windows",
+    "Baixe o": "Descarga",
+    "e abra. Não há nada para instalar antes, e o app não pede senha de administrador.": "y ábrelo. No hay nada que instalar antes, y la app no pide contraseña de administrador.",
+    "Primeira vez que você abrir": "La primera vez que lo abras",
+    "O arquivo ainda não tem assinatura digital, então o Windows mostra um aviso na primeira execução. É esperado:": "El archivo aún no tiene firma digital, así que Windows muestra un aviso en la primera ejecución. Es lo esperado:",
+    "Abra o": "Abre",
+    "Se aparecer a tela azul “O Windows protegeu o computador”, clique em": "Si aparece la pantalla azul “Windows protegió su PC”, haz clic en",
+    "Mais informações": "Más información",
+    "Clique em": "Haz clic en",
+    "Executar assim mesmo": "Ejecutar de todas formas",
+    "O aviso aparece porque o Windows não conhece o editor do programa, não porque encontrou algo no arquivo. Se preferir não confiar no arquivo pronto, confira a assinatura abaixo ou compile a partir do código.": "El aviso aparece porque Windows no conoce al editor del programa, no porque haya encontrado algo en el archivo. Si prefieres no confiar en el archivo listo, verifica el hash de abajo o compila desde el código.",
+    "Conferir o arquivo": "Verificar el archivo",
+    "O SHA-256 abaixo é o do arquivo publicado. Se o do seu download for igual, ele não foi alterado no caminho.": "El SHA-256 de abajo es el del archivo publicado. Si el de tu descarga es igual, no fue modificado en el camino.",
+    "Veja o valor na página da versão no GitHub.": "Consulta el valor en la página de la versión en GitHub.",
+    "Para calcular o do arquivo que você baixou, abra o PowerShell na pasta de downloads e rode:": "Para calcular el del archivo que descargaste, abre PowerShell en la carpeta de descargas y ejecuta:",
+    "Compilar você mesmo": "Compílalo tú mismo",
+    "O código inteiro está no GitHub, sob licença MIT, com o passo a passo para gerar o mesmo": "Todo el código está en GitHub, bajo licencia MIT, con los pasos para generar el mismo",
+    "Instruções de compilação": "Instrucciones de compilación",
+    "Versões anteriores": "Versiones anteriores",
+    "Todas as versões publicadas, com as notas de cada uma, ficam na página de releases.": "Todas las versiones publicadas, con sus notas, están en la página de releases.",
+    "Ver todas as versões": "Ver todas las versiones",
+    "Em desenvolvimento": "En desarrollo",
+    "Ainda não há versão para Mac. Acompanhe o repositório para saber quando sair.": "Aún no hay versión para Mac. Sigue el repositorio para saber cuándo salga.",
+    "Ainda não há versão para Linux. Acompanhe o repositório para saber quando sair.": "Aún no hay versión para Linux. Sigue el repositorio para saber cuándo salga.",
+    "Remover o app": "Quitar la app",
+    "Não há desinstalador porque nada é instalado. Feche o ALL MUSIC pelo ícone da bandeja, apague o": "No hay desinstalador porque nada se instala. Cierra ALL MUSIC desde el icono de la bandeja, borra",
+    "e, se quiser remover também seus dados locais, apague a pasta": "y, si también quieres quitar tus datos locales, borra la carpeta",
+    "ALL MUSIC é um projeto independente de código aberto. Não é afiliado, patrocinado nem endossado pelo Spotify ou pelo YouTube. A reprodução do Spotify exige conta Premium.": "ALL MUSIC es un proyecto independiente de código abierto. No está afiliado, patrocinado ni avalado por Spotify o YouTube. La reproducción de Spotify requiere cuenta Premium."
+  }
+};
+const UI = {
+  pt: { version: 'Versão {v}', published: 'Publicada em {d}', copy: 'Copiar', copied: 'Copiado', locale: 'pt-BR' },
+  en: { version: 'Version {v}', published: 'Published {d}', copy: 'Copy', copied: 'Copied', locale: 'en' },
+  es: { version: 'Versión {v}', published: 'Publicada el {d}', copy: 'Copiar', copied: 'Copiado', locale: 'es' },
+};
+
+const texts = [];
+const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+for (let node; (node = walker.nextNode());) {
+  if (node.parentElement.closest('script, style, select, pre, #sha, #version, #size, #date') || !node.nodeValue.trim()) continue;
+  texts.push([node, node.nodeValue]);
+}
+const attrs = [...document.querySelectorAll('[aria-label], meta[name=description]')].map(el => {
+  const name = el.hasAttribute('content') ? 'content' : 'aria-label';
+  return [el, name, el.getAttribute(name)];
+});
+const TITLE = document.title;
+const SHA_FALLBACK = document.querySelector('#sha').textContent;
+const VERSION_FALLBACK = document.querySelector('#version').textContent;
+
+let lang = 'en';
+let release = null; // dados da versão mais recente, vindos do GitHub
+
+function render() {
+  const dict = TRANSLATIONS[lang] || {};
+  const tr = original => { const key = original.trim(); return dict[key] ? original.replace(key, dict[key]) : original; };
+  for (const [node, original] of texts) node.nodeValue = tr(original);
+  for (const [el, name, original] of attrs) el.setAttribute(name, tr(original));
+  document.title = tr(TITLE);
+  document.documentElement.lang = UI[lang].locale;
+  document.querySelector('#lang').value = lang;
+  document.querySelector('#copy-sha span').textContent = UI[lang].copy;
+
+  if (release) {
+    document.querySelector('#version').textContent = UI[lang].version.replace('{v}', release.tag);
+    document.querySelector('#size').textContent = release.size ? Math.round(release.size / 1048576) + ' MB' : '';
+    document.querySelector('#date').textContent = UI[lang].published.replace('{d}', release.date.toLocaleDateString(UI[lang].locale, { day: 'numeric', month: 'short', year: 'numeric' }));
+    if (release.sha) {
+      document.querySelector('#sha').textContent = release.sha;
+      document.querySelector('#copy-sha').hidden = false;
+    }
+  } else {
+    document.querySelector('#version').textContent = tr(VERSION_FALLBACK);
+    document.querySelector('#sha').textContent = tr(SHA_FALLBACK);
+  }
+}
+
+function setLanguage(next) {
+  lang = next;
+  try { localStorage.setItem('lang', next); } catch { }
+  render();
+}
+
+document.querySelector('#lang').addEventListener('change', e => setLanguage(e.target.value));
+document.querySelector('#copy-sha').addEventListener('click', async () => {
+  await navigator.clipboard.writeText(release.sha).catch(() => { });
+  document.querySelector('#copy-sha span').textContent = UI[lang].copied;
+  setTimeout(() => { document.querySelector('#copy-sha span').textContent = UI[lang].copy; }, 1600);
+});
+
+let saved = null;
+try { saved = localStorage.getItem('lang'); } catch { }
+const wanted = new URLSearchParams(location.search).get('lang') || saved || navigator.language.slice(0, 2);
+setLanguage(['pt', 'en', 'es'].includes(wanted) ? wanted : 'en');
+
+// Versão, tamanho, data e SHA-256 vêm da versão mais recente publicada, então a página nunca
+// fica desatualizada. Se o GitHub não responder, ficam os textos genéricos.
+fetch(`https://api.github.com/repos/${REPO}/releases/latest`)
+  .then(r => (r.ok ? r.json() : Promise.reject()))
+  .then(data => {
+    const asset = (data.assets || []).find(a => a.name === 'allmusic.exe');
+    release = {
+      tag: data.tag_name,
+      date: new Date(data.published_at),
+      size: asset?.size,
+      sha: asset?.digest?.startsWith('sha256:') ? asset.digest.slice(7) : '',
+    };
+    render();
+  })
+  .catch(() => { });
+</script>
+</body>
+</html>

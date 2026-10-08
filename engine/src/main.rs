@@ -5,6 +5,8 @@
 //! pelo stdout. Comandos com `req` recebem uma resposta `{"ev":"result","req":…}`. Linhas do
 //! stdout que não começam com `{` são ruído de bibliotecas e devem ser ignoradas por quem lê.
 
+mod fx;
+
 use std::{
     collections::HashMap,
     path::PathBuf,
@@ -17,11 +19,11 @@ use http::{header::CONTENT_TYPE, HeaderMap, HeaderValue, Method};
 use librespot_core::{
     authentication::Credentials, cache::Cache, config::SessionConfig, session::Session, SpotifyId, SpotifyUri,
 };
-use librespot_metadata::{image::ImageSize, Metadata, Track};
+use librespot_metadata::{image::{ImageSize, Images}, Album, Artist, Metadata, Track};
 use librespot_oauth::{OAuthClientBuilder, OAuthToken};
 use librespot_playback::{
     audio_backend,
-    config::{AudioFormat, Bitrate, PlayerConfig},
+    config::{AudioFormat, Bitrate, PlayerConfig, VolumeCtrl},
     mixer::{self, Mixer, MixerConfig},
     player::{Player, PlayerEvent, PlayerEventChannel},
 };
@@ -82,6 +84,12 @@ enum Command {
     Pause,
     Seek { ms: u32 },
     Volume { v: f64 },
+    /// Efeito de áudio ("off", "muffled" ou "8d") e, opcionalmente, seus ajustes (ver `fx::Config`).
+    Fx {
+        name: String,
+        cutoff: Option<f64>, q: Option<f64>, steep: Option<bool>, hp: Option<f64>, gain: Option<f64>,
+        turn: Option<f64>, depth: Option<f64>, echo: Option<f64>, hop: Option<bool>,
+    },
     // biblioteca
     Profile,
     Liked,
@@ -90,6 +98,8 @@ enum Command {
     Search { q: String },
     Tracks { uris: Vec<String> },
     Like { uri: String, on: bool },
+    Artist { id: String },
+    Album { id: String },
 }
 
 fn emit(event: Value) {
@@ -108,16 +118,18 @@ struct Engine {
     mixer: Arc<dyn Mixer>,
 }
 
-async fn connect(credentials: Credentials, cache: &Cache, volume: u16) -> Result<(Engine, PlayerEventChannel), AnyError> {
+async fn connect(credentials: Credentials, cache: &Cache, volume: u16, effect: fx::Shared) -> Result<(Engine, PlayerEventChannel), AnyError> {
     let session = Session::new(SessionConfig::default(), Some(cache.clone()));
     session.connect(credentials, true).await?;
 
-    let mixer = mixer::find(None).ok_or("mixer indisponível")?(MixerConfig::default())?;
+    // Volume linear e normalização ligada: o mesmo comportamento do player do YouTube, para as
+    // faixas das duas origens soarem na mesma altura com o controle na mesma posição.
+    let mixer = mixer::find(None).ok_or("mixer indisponível")?(MixerConfig { volume_ctrl: VolumeCtrl::Linear, ..MixerConfig::default() })?;
     mixer.set_volume(volume);
     let backend = audio_backend::find(None).ok_or("saída de áudio indisponível")?;
-    let config = PlayerConfig { bitrate: Bitrate::Bitrate320, ..PlayerConfig::default() };
+    let config = PlayerConfig { bitrate: Bitrate::Bitrate320, normalisation: true, ..PlayerConfig::default() };
     let player = Player::new(config, session.clone(), mixer.get_soft_volume(), move || {
-        backend(None, AudioFormat::default())
+        Box::new(fx::FxSink::new(backend(None, AudioFormat::default()), effect))
     });
     let events = player.get_player_event_channel();
     Ok((Engine { session, player, mixer }, events))
@@ -183,20 +195,28 @@ impl TrackCache {
     }
 }
 
+/// Endereço da imagem no tamanho pedido (ou da primeira disponível).
+fn image_url(images: &Images, wanted: ImageSize) -> String {
+    images.iter().find(|c| c.size == wanted).or(images.first()).and_then(|c| c.id.to_base16().ok())
+        .map(|id| format!("https://i.scdn.co/image/{id}"))
+        .unwrap_or_default()
+}
+
+fn bare_id(uri: &SpotifyUri) -> String {
+    uri.to_uri().ok().and_then(|u| u.rsplit(':').next().map(str::to_owned)).unwrap_or_default()
+}
+
 async fn track_info(session: &Session, uri: &str) -> Option<Value> {
     let track = Track::get(session, &SpotifyUri::from_uri(uri).ok()?).await.ok()?;
-    let cover = |wanted: ImageSize| {
-        let covers = &track.album.covers;
-        covers.iter().find(|c| c.size == wanted).or(covers.first()).and_then(|c| c.id.to_base16().ok())
-            .map(|id| format!("https://i.scdn.co/image/{id}"))
-            .unwrap_or_default()
-    };
+    let cover = |wanted: ImageSize| image_url(&track.album.covers, wanted);
     Some(json!({
         "src": "sp",
         "id": uri.rsplit(':').next().unwrap_or_default(),
         "uri": uri,
         "title": track.name,
         "artist": track.artists.iter().map(|a| a.name.as_str()).collect::<Vec<_>>().join(", "),
+        "artists": track.artists.iter().map(|a| json!({ "id": bare_id(&a.id), "name": a.name })).collect::<Vec<_>>(),
+        "album": { "id": bare_id(&track.album.id), "name": track.album.name },
         "art": cover(ImageSize::SMALL),
         "artBig": cover(ImageSize::LARGE),
         "dur": track.duration,
@@ -304,6 +324,46 @@ async fn set_liked(session: &Session, uri: &str, on: bool) -> Result<Value, AnyE
     Ok(Value::Null)
 }
 
+async fn album_card(session: &Session, uri: &SpotifyUri) -> Option<Value> {
+    let album = Album::get(session, uri).await.ok()?;
+    Some(json!({
+        "id": bare_id(uri),
+        "name": album.name,
+        "year": album.date.as_utc().year(),
+        "image": image_url(&album.covers, ImageSize::DEFAULT),
+    }))
+}
+
+/// Perfil do artista: foto, faixas mais populares no país da conta e discografia.
+async fn artist(session: &Session, id: &str) -> Result<Value, AnyError> {
+    let artist = Artist::get(session, &SpotifyUri::from_uri(&format!("spotify:artist:{id}"))?).await?;
+    let portraits = if artist.portraits.is_empty() { &artist.portrait_group } else { &artist.portraits };
+    let top: Vec<Value> = artist.top_tracks.for_country(&session.country()).iter()
+        .filter_map(|uri| uri.to_uri().ok())
+        .map(|uri| json!({ "uri": uri }))
+        .collect();
+    // álbuns primeiro, depois singles; uma versão de cada, no máximo 24 no total
+    let releases: Vec<SpotifyUri> = artist.albums.current_releases().chain(artist.singles.current_releases()).take(24).cloned().collect();
+    let albums = stream::iter(releases).map(|uri| async move { album_card(session, &uri).await }).buffered(8)
+        .filter_map(|card| async move { card })
+        .collect::<Vec<_>>()
+        .await;
+    Ok(json!({ "id": id, "name": artist.name, "image": image_url(portraits, ImageSize::LARGE), "top": top, "albums": albums }))
+}
+
+async fn album(session: &Session, id: &str) -> Result<Value, AnyError> {
+    let album = Album::get(session, &SpotifyUri::from_uri(&format!("spotify:album:{id}"))?).await?;
+    let refs: Vec<Value> = album.tracks().filter_map(|uri| uri.to_uri().ok()).map(|uri| json!({ "uri": uri })).collect();
+    Ok(json!({
+        "id": id,
+        "name": album.name,
+        "artist": album.artists.iter().map(|a| a.name.as_str()).collect::<Vec<_>>().join(", "),
+        "year": album.date.as_utc().year(),
+        "image": image_url(&album.covers, ImageSize::LARGE),
+        "refs": refs,
+    }))
+}
+
 async fn library(session: Session, cache: Arc<TrackCache>, command: Command) -> Result<Value, AnyError> {
     match command {
         Command::Profile => {
@@ -319,6 +379,8 @@ async fn library(session: Session, cache: Arc<TrackCache>, command: Command) -> 
         Command::Search { q } => context_refs(&session, &search_uri(&q)).await,
         Command::Tracks { uris } => Ok(tracks(&session, &cache, uris).await),
         Command::Like { uri, on } => set_liked(&session, &uri, on).await,
+        Command::Artist { id } => artist(&session, &id).await,
+        Command::Album { id } => album(&session, &id).await,
         _ => Err("comando sem resposta".into()),
     }
 }
@@ -352,14 +414,16 @@ async fn main() {
         Ok(cache) => cache,
         Err(err) => return fail("pasta de dados", err),
     };
-    let track_cache = Arc::new(TrackCache::open(dir.join("tracks.json")));
+    // tracks2: o formato passou a guardar os artistas e o álbum de cada faixa
+    let track_cache = Arc::new(TrackCache::open(dir.join("tracks2.json")));
+    let effect = fx::Shared::default();
     let mut volume = u16::MAX / 2;
     let mut engine: Option<Engine> = None;
     let mut events: Option<PlayerEventChannel> = None;
 
     // Login salvo de uma execução anterior.
     match cache.credentials() {
-        Some(credentials) => match connect(credentials, &cache, volume).await {
+        Some(credentials) => match connect(credentials, &cache, volume, effect.clone()).await {
             Ok((e, ch)) => {
                 emit(json!({ "ev": "ready", "user": e.session.username() }));
                 engine = Some(e);
@@ -384,7 +448,7 @@ async fn main() {
             Some(result) = login_rx.recv() => {
                 login_pending = false;
                 match result {
-                    Ok(token) => match connect(Credentials::with_access_token(&token.access_token), &cache, volume).await {
+                    Ok(token) => match connect(Credentials::with_access_token(&token.access_token), &cache, volume, effect.clone()).await {
                         Ok((e, ch)) => {
                             emit(json!({ "ev": "ready", "user": e.session.username() }));
                             engine = Some(e);
@@ -412,7 +476,7 @@ async fn main() {
                     engine = None;
                     events = None;
                     if let Some(credentials) = cache.credentials() {
-                        match connect(credentials, &cache, volume).await {
+                        match connect(credentials, &cache, volume, effect.clone()).await {
                             Ok((e, ch)) => { engine = Some(e); events = Some(ch); }
                             Err(err) => fail("reconectar", err),
                         }
@@ -462,6 +526,19 @@ async fn main() {
                             Command::Play => e.player.play(),
                             Command::Pause => e.player.pause(),
                             Command::Seek { ms } => e.player.seek(ms),
+                            Command::Fx { name, cutoff, q, steep, hp, gain, turn, depth, echo, hop } => {
+                                let mut config = effect.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+                                config.effect = fx::by_name(&name);
+                                if let Some(v) = cutoff { config.cutoff = v.clamp(80.0, 8000.0); }
+                                if let Some(v) = q { config.q = v.clamp(0.5, 6.0); }
+                                if let Some(v) = steep { config.steep = v; }
+                                if let Some(v) = hp { config.hp = v.clamp(0.0, 800.0); }
+                                if let Some(v) = hop { config.hop = v; }
+                                if let Some(v) = gain { config.gain = v.clamp(0.2, 4.0); }
+                                if let Some(v) = turn { config.turn = v.clamp(2.0, 40.0); }
+                                if let Some(v) = depth { config.depth = v.clamp(0.0, 1.0); }
+                                if let Some(v) = echo { config.echo = v.clamp(0.0, 1.0); }
+                            }
                             Command::Volume { v } => {
                                 volume = (v.clamp(0.0, 1.0) * f64::from(u16::MAX)) as u16;
                                 e.mixer.set_volume(volume);

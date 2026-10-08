@@ -11,7 +11,7 @@ const ICONS = {
   play: 'PlayIcon', pause: 'PauseIcon', prev: 'PreviousIcon', next: 'NextIcon',
   volume: 'VolumeHighIcon', shuffle: 'ShuffleIcon', repeat: 'RepeatIcon',
   expand: 'ArrowLeft01Icon', 'win-min': 'MinusSignIcon', 'win-max': 'SquareIcon', collapse: 'PanelRightCloseIcon', 'collapse-left': 'PanelLeftOpenIcon', close: 'Cancel01Icon', user: 'UserIcon', copy: 'Copy01Icon',
-  arrow: 'ArrowRight01Icon', check: 'Tick02Icon', logout: 'Logout01Icon', link: 'LinkSquare02Icon',
+  arrow: 'ArrowRight01Icon', check: 'Tick02Icon', logout: 'Logout01Icon', link: 'LinkSquare02Icon', fx: 'MagicWand01Icon', tune: 'ToolsIcon',
 };
 
 const kebab = s => s.replace(/[A-Z]/g, c => '-' + c.toLowerCase());
@@ -22,7 +22,8 @@ const LANDING_ICONS = {
   search: 'Search01Icon', heart: 'FavouriteIcon', prev: 'PreviousIcon', next: 'NextIcon', pause: 'PauseIcon',
   close: 'Cancel01Icon', 'win-min': 'MinusSignIcon', 'win-max': 'SquareIcon',
   queue: 'Playlist01Icon', headphones: 'HeadphonesIcon', game: 'GameController03Icon', cursor: 'CursorPointer01Icon',
-  lock: 'LockIcon', drive: 'HardDriveIcon', 'cloud-off': 'NoInternetIcon',
+  lock: 'LockIcon', drive: 'HardDriveIcon', 'cloud-off': 'NoInternetIcon', github: 'GithubIcon', eye: 'ViewIcon', copy: 'Copy01Icon',
+  fx: 'MagicWand01Icon', artist: 'UserIcon', chart: 'Analytics01Icon',
 };
 
 function symbols(icons) {
@@ -48,9 +49,11 @@ async function landing() {
     await copyFile(`ui/fonts/${file}`, `landing/assets/${file}`);
   }
   await copyFile('ui/logo.png', 'landing/assets/logo.png');
-  const html = await readFile('landing/index.html', 'utf8');
   const block = `<!-- icons:start --><svg width="0" height="0" style="position:absolute" aria-hidden="true">${symbols(LANDING_ICONS).join('')}</svg><!-- icons:end -->`;
-  await writeFile('landing/index.html', html.replace(/<!-- icons:start -->[\s\S]*?<!-- icons:end -->/, block));
+  for (const file of ['landing/index.html', 'landing/download.html']) {
+    const html = await readFile(file, 'utf8');
+    await writeFile(file, html.replace(/<!-- icons:start -->[\s\S]*?<!-- icons:end -->/, block));
+  }
 }
 
 async function fonts() {

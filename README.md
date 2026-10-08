@@ -15,7 +15,10 @@ The file is not code-signed, so Windows SmartScreen shows a warning the first ti
 ## What it does
 
 - **One queue for both.** Spotify tracks and YouTube links play back to back, and local playlists can mix the two.
-- **YouTube as audio.** Paste a link in the search box; no video is shown.
+- **YouTube as audio.** Search YouTube by name or paste a link; no video is shown.
+- **Search both.** The search box has a Spotify tab and a YouTube tab, and you can like a song right from the results.
+- **Audio effects.** Muffled and 8D, each with presets and sliders you can change while the music plays. They work on Spotify and YouTube tracks.
+- **Artist and album pages.** Click an artist's name for their top tracks and discography.
 - **One-click Spotify sign-in.** You confirm on Spotify's own site, in your browser. No developer key needed.
 - **Works without Spotify.** Close the welcome screen to use it with YouTube links only.
 - **Stays out of the way.** Minimizing sends it to the tray; keyboard media keys keep working.
@@ -35,7 +38,7 @@ This is the part worth checking in the code if you are deciding whether to trust
 | `accounts.spotify.com` | Sign-in, in your own browser | `engine/src/main.rs` (`browser_login`) |
 | Spotify access points and `spclient` | Library, search, audio | `engine/src/main.rs`, via [librespot](https://github.com/librespot-org/librespot) |
 | `i.scdn.co`, `i.ytimg.com` | Cover art | `ui/js/app.js` |
-| `www.youtube.com` | The official embedded player, and `oembed` for a video's title | `ui/js/youtube.js`, `host/LocalServer.cs` |
+| `www.youtube.com` | The official embedded player, `oembed` for a video's title, and the search results page for YouTube search | `ui/js/youtube.js`, `host/LocalServer.cs` |
 
 **Your password never reaches the app.** Sign-in is OAuth with PKCE: Spotify's site hands the app an authorization, not your credentials.
 
@@ -62,7 +65,7 @@ To remove the app completely, delete `allmusic.exe` and that folder. Nothing is 
 | `engine/` | Rust process built on librespot: Spotify sign-in, library and audio. Talks to the host over JSON lines on stdin/stdout |
 | `landing/` | The website |
 | `video/` | Remotion sources for the promo videos |
-| `tools/` | Script that generates icons, fonts and the logo |
+| `tools/` | Scripts that generate icons, fonts and the logo, and record the app for the videos |
 
 The published `.exe` embeds the interface and the engine; the engine is extracted to the data folder on first run.
 
@@ -91,6 +94,8 @@ npm run assets
 ## Things you should know
 
 - **It is unofficial.** Spotify access goes through librespot, an open-source reimplementation of Spotify's client protocol. This is outside Spotify's terms of use, it can stop working whenever Spotify changes something, and you use it at your own risk.
+- **YouTube search reads the results page.** YouTube has no keyless search API, so the app fetches the public results page and reads the videos from it. It can break when YouTube changes that page.
+- **Effects on YouTube tracks run inside the player frame.** The app injects `ui/js/yt-fx.js` into the embedded player to route its audio through Web Audio filters; nothing else in the frame is touched.
 - **YouTube ads.** Playback uses YouTube's official embedded player, which may play ads on some videos. Some videos block embedded playback and cannot be played.
 - **Play counts are local.** They start when you start using the app; Spotify does not expose your play history.
 - **Windows only.**

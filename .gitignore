@@ -11,3 +11,7 @@ video/public/raw*.mp4
 
 # pacotes gerados à mão
 *.zip
+video/public/tour/
+video/public/tour2/
+video/public/fx-audio.*
+video/public/tour2b/

@@ -82,8 +82,10 @@ sealed class MainForm : Form
             var data = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ALL MUSIC");
             // Autoplay liberado para trocar de faixa sem clique; as teclas de mídia ficam com o host (WM_HOTKEY),
             // senão o Chromium e o host responderiam à mesma tecla.
-            var options = new CoreWebView2EnvironmentOptions(
-                "--autoplay-policy=no-user-gesture-required --disable-features=HardwareMediaKeyHandling");
+            var flags = "--autoplay-policy=no-user-gesture-required --disable-features=HardwareMediaKeyHandling";
+            // Só com --dev: porta de depuração local, usada para automatizar a interface (testes e gravação de vídeo).
+            if (_dev) flags += " --remote-debugging-port=9333";
+            var options = new CoreWebView2EnvironmentOptions(flags);
             var env = await CoreWebView2Environment.CreateAsync(null, data, options);
             await _web.EnsureCoreWebView2Async(env);
         }
@@ -118,6 +120,13 @@ sealed class MainForm : Form
             e.Cancel = true;
             OpenExternal(e.Uri);
         };
+        // Efeitos de áudio nas faixas do YouTube: o script roda em todos os frames, mas só age dentro
+        // do iframe do player (ver ui/js/yt-fx.js), onde a página do app não alcança.
+        var assembly = typeof(MainForm).Assembly;
+        var fxScript = assembly.GetManifestResourceNames().First(name => name.EndsWith("yt-fx.js", StringComparison.Ordinal));
+        using (var reader = new StreamReader(assembly.GetManifestResourceStream(fxScript)!))
+            await core.AddScriptToExecuteOnDocumentCreatedAsync(await reader.ReadToEndAsync());
+
         core.WebMessageReceived += OnWebMessage;
         core.NavigationCompleted += (_, _) => SendWindowState();
         core.Navigate(LocalServer.Origin + "/");

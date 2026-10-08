@@ -18,7 +18,7 @@
       <label class="search">
         <svg class="i"><use href="/icons.svg#search"/></svg>
         <input id="search" type="text" spellcheck="false" autocomplete="off"
-               placeholder="Buscar no Spotify ou colar um link do YouTube">
+               placeholder="Buscar no Spotify ou no YouTube">
       </label>
       <div class="search-drop" id="search-drop" hidden></div>
     </div>
@@ -106,6 +106,7 @@
         </div>
       </div>
       <div class="pb-vol">
+        <button class="ic toggle" id="fx" title="Efeitos de áudio"><svg class="i"><use href="/icons.svg#fx"/></svg></button>
         <svg class="i"><use href="/icons.svg#volume"/></svg>
         <input type="range" id="volume" min="0" max="100" value="70" aria-label="Volume">
       </div>
@@ -142,6 +143,7 @@
 <div id="yt-holder" aria-hidden="true"><div id="yt-player"></div></div>
 
 <div id="menu" hidden></div>
+<div id="fx-panel" hidden></div>
 <div id="toasts"></div>
 
 <script type="module" src="/js/app.js"></script>

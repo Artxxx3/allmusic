@@ -6,24 +6,24 @@ import React from 'react';
 import { AbsoluteFill, Easing, Img, OffthreadVideo, Sequence, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig } from 'remotion';
 import { C, DISPLAY, UI } from './Promo.jsx';
 
-const FADE = 24; // quadros de fusão entre cenas
-const CLAMP = { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' };
-const EASE = { easing: Easing.inOut(Easing.cubic), ...CLAMP };
+export const FADE = 24; // quadros de fusão entre cenas
+export const CLAMP = { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' };
+export const EASE = { easing: Easing.inOut(Easing.cubic), ...CLAMP };
 
 // Memória lida no Gerenciador de Tarefas da própria gravação (MB), todas no mesmo instante (105 s):
 // Spotify 740,7 · Chrome 1.069,0 · allmusic 64,3 · WebView2 299,6. O motor de áudio é estimado.
-const RAM = { spotify: 741, chrome: 1069, app: 64, webview: 300, engine: 10 };
+export const RAM = { spotify: 741, chrome: 1069, app: 64, webview: 300, engine: 10 };
 const TM_AT = 105.3; // esse instante, quase congelado, serve de fundo para todas as cenas de memória
-const OURS = RAM.app + RAM.webview + RAM.engine;
-const THEIRS = RAM.spotify + RAM.chrome;
+export const OURS = RAM.app + RAM.webview + RAM.engine;
+export const THEIRS = RAM.spotify + RAM.chrome;
 
-function useIn(delay = 0, damping = 200) {
+export function useIn(delay = 0, damping = 200) {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   return spring({ frame: frame - delay, fps, config: { damping } });
 }
 
-const Rise = ({ delay = 0, y = 30, style, children }) => {
+export const Rise = ({ delay = 0, y = 30, style, children }) => {
   const t = useIn(delay);
   return <div style={{ opacity: t, transform: `translateY(${(1 - t) * y}px)`, ...style }}>{children}</div>;
 };
@@ -73,7 +73,7 @@ const Click = ({ x, y, at }) => {
 };
 
 /** Legenda em faixa sólida, legível sobre qualquer tela. */
-const Caption = ({ from = 0, to = 99999, children }) => {
+export const Caption = ({ from = 0, to = 99999, children }) => {
   const t = interpolate(useCurrentFrame(), [from, from + 12, to - 10, to], [0, 1, 1, 0], CLAMP);
   return (
     <div style={{ position: 'absolute', left: 0, right: 0, bottom: 84, display: 'flex', justifyContent: 'center', opacity: t, transform: `translateY(${(1 - t) * 20}px)` }}>
@@ -84,8 +84,8 @@ const Caption = ({ from = 0, to = 99999, children }) => {
   );
 };
 
-const Red = ({ children }) => <span style={{ color: C.red }}>{children}</span>;
-const EYEBROW = { font: `600 20px/1 ${DISPLAY}`, textTransform: 'uppercase', letterSpacing: '0.12em', color: C.t3 };
+export const Red = ({ children }) => <span style={{ color: C.red }}>{children}</span>;
+export const EYEBROW = { font: `600 20px/1 ${DISPLAY}`, textTransform: 'uppercase', letterSpacing: '0.12em', color: C.t3 };
 const fmt = n => Math.round(n).toLocaleString('en-US');
 
 /** Painel sólido para números e gráficos, posto sobre a área vazia da tela. */
@@ -127,7 +127,7 @@ const ROW = { x: 50, w: 722, h: 28 };
 const ZOOM_APP = [{ f: 0, z: 1, x: 960, y: 540 }, { f: 70, z: 1.2, x: 958, y: 505 }];
 
 // ---------- 1. Spotify ----------
-const SpotifyApp = () => (
+export const SpotifyApp = () => (
   <>
     <Screen from={93.2} />
     <Caption from={14}>You open <Red>Spotify</Red> for your library…</Caption>
@@ -135,7 +135,7 @@ const SpotifyApp = () => (
 );
 
 // ---------- 2. Spotify no Gerenciador de Tarefas ----------
-const SpotifyRam = () => (
+export const SpotifyRam = () => (
   <>
     <Screen from={TM_AT} rate={0.12}>
       <Box {...ROW} y={230} delay={20} />
@@ -150,7 +150,7 @@ const SpotifyRam = () => (
 );
 
 // ---------- 3. YouTube no navegador (com anúncio) ----------
-const YouTubeAd = () => {
+export const YouTubeAd = () => {
   const t = useIn(26);
   return (
     <>
@@ -165,7 +165,7 @@ const YouTubeAd = () => {
 };
 
 // ---------- 4. o navegador no Gerenciador de Tarefas ----------
-const ChromeRam = () => (
+export const ChromeRam = () => (
   <>
     <Screen from={TM_AT} rate={0.12}>
       <Box {...ROW} y={173} delay={20} />
@@ -180,7 +180,7 @@ const ChromeRam = () => (
 );
 
 // ---------- 5. a conta ----------
-const Total = () => (
+export const Total = () => (
   <>
     <Screen from={TM_AT} rate={0.12}>
       <Box {...ROW} y={173} delay={10} />
@@ -237,7 +237,7 @@ const Home = () => (
 );
 
 // ---------- 10. a comparação ----------
-const Verdict = () => (
+export const Verdict = () => (
   <>
     <Screen from={TM_AT} rate={0.12}>
       <Box {...ROW} y={315} delay={14} />
